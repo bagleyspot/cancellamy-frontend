@@ -199,8 +199,8 @@ export function LandingPage() {
                 </ButtonLink>
                 <ButtonLink
                   to="/broker"
-                  variant="secondary"
-                  className="border-slate-700 bg-slate-900 text-slate-100 hover:border-slate-600 hover:bg-slate-800"
+                  variant="inverse"
+                  className="border-slate-700 bg-slate-900 text-white hover:border-slate-600 hover:bg-slate-800"
                 >
                   {t.ctaSecondary}
                 </ButtonLink>

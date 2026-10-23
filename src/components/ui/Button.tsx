@@ -3,15 +3,17 @@ import { Link } from 'react-router';
 import { cn } from '@/lib/cn';
 import { Spinner } from './Spinner';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'accent';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'accent' | 'inverse' | 'outline';
 type Size = 'md' | 'sm';
 
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-primary text-primary-fg hover:bg-primary-hover border border-transparent shadow-xs',
-  secondary: 'bg-surface text-fg border border-line hover:bg-sunken hover:border-muted/40 shadow-2xs',
-  ghost: 'bg-transparent text-muted hover:text-fg border border-transparent hover:bg-sunken',
-  danger: 'bg-danger-soft text-danger border border-danger/30 hover:bg-danger/15 hover:border-danger/50',
-  accent: 'bg-accent text-primary-fg border border-transparent hover:opacity-95 shadow-xs',
+  primary: 'bg-primary text-primary-fg hover:bg-primary-hover border border-transparent shadow-xs font-semibold',
+  secondary: 'bg-surface text-fg border border-line hover:bg-sunken hover:border-fg/30 shadow-2xs font-semibold',
+  ghost: 'bg-transparent text-fg/80 hover:text-fg border border-transparent hover:bg-sunken font-medium',
+  danger: 'bg-danger-soft text-danger border border-danger/40 hover:bg-danger hover:text-white hover:border-transparent font-semibold shadow-2xs transition-colors',
+  accent: 'bg-accent text-primary-fg border border-transparent hover:opacity-95 shadow-xs font-semibold',
+  inverse: 'bg-slate-900 text-white border border-slate-700 hover:bg-slate-800 hover:border-slate-600 shadow-xs font-semibold',
+  outline: 'bg-transparent text-fg border border-line hover:bg-sunken hover:border-fg/30 font-medium',
 };
 
 const SIZES: Record<Size, string> = {

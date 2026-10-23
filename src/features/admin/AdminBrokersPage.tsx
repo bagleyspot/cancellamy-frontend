@@ -184,7 +184,7 @@ export function AdminBrokersPage() {
                               const next = parseVerification(event.target.value);
                               if (next) patch.mutate({ id: broker.id, patch: { verificationStatus: next satisfies VerificationStatus } });
                             }}
-                            className="min-h-9 rounded-lg border border-line bg-surface px-2"
+                            className="min-h-9 rounded-lg border border-line bg-surface px-2 text-xs font-semibold text-fg"
                           >
                             {VERIFICATION_OPTIONS.map((option) => (
                               <option key={option} value={option}>

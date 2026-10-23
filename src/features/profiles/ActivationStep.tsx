@@ -34,8 +34,8 @@ export function ActivationStep({ profile, result, onActivated }: ActivationStepP
         </Alert>
 
         {result.emailRequests > 0 && (
-          <div className="rounded-xl border border-line bg-surface-muted/50 p-4 text-sm space-y-2">
-            <div className="flex items-center gap-2 font-medium text-foreground">
+          <div className="rounded-xl border border-line bg-sunken/60 p-4 text-sm space-y-2">
+            <div className="flex items-center gap-2 font-semibold text-fg">
               <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
               <span>Invio a scaglioni: massimo {dailyLimit} richieste al giorno</span>
             </div>
@@ -74,10 +74,10 @@ export function ActivationStep({ profile, result, onActivated }: ActivationStepP
           <AuthorizationPdfActions profileId={profile.id} />
         </section>
       )}
-      <div className="rounded-xl border border-line/70 bg-surface-muted/30 p-3 text-xs text-muted flex items-start gap-2">
+      <div className="rounded-xl border border-line bg-sunken/60 p-3 text-xs text-muted flex items-start gap-2">
         <Clock className="h-4 w-4 shrink-0 text-primary mt-0.5" aria-hidden="true" />
         <p>
-          <strong>Invio equo e scaglionato:</strong> Per rispettare le quote operative e prevenire filtri antispam dei broker, le richieste email vengono inviate a gruppi di massimo 5 al giorno. Le restanti richieste rimangono in coda e vengono trasmesse automaticamente ogni giorno successivo.
+          <strong className="text-fg font-semibold">Invio equo e scaglionato:</strong> Per rispettare le quote operative e prevenire filtri antispam dei broker, le richieste email vengono inviate a gruppi di massimo 5 al giorno. Le restanti richieste rimangono in coda e vengono trasmesse automaticamente ogni giorno successivo.
         </p>
       </div>
       <ApiErrorAlert error={activate.isError ? activate.error : null} />

@@ -32,10 +32,10 @@ function FieldShell({ id, label, error, hint, children }: FieldShellProps) {
 }
 
 const CONTROL =
-  'block w-full rounded-lg border bg-surface px-3.5 py-2 text-sm text-fg shadow-2xs transition-colors placeholder:text-muted/65 focus:border-primary disabled:opacity-60';
+  'block w-full rounded-lg border bg-surface px-3.5 py-2 text-sm text-fg shadow-2xs transition-colors placeholder:text-muted/80 focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-60';
 
 function controlClass(error: string | undefined, extra?: string): string {
-  return cn(CONTROL, error ? 'border-danger' : 'border-line hover:border-muted/60', extra);
+  return cn(CONTROL, error ? 'border-danger' : 'border-line hover:border-fg/40', extra);
 }
 
 function describedBy(id: string, error?: string, hint?: ReactNode): string | undefined {

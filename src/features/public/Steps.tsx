@@ -28,7 +28,7 @@ export function Steps({ items }: { items: readonly StepItem[] }) {
                 >
                   0{index + 1}
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-sunken px-2.5 py-0.5 text-[11px] font-medium text-muted">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-sunken px-2.5 py-0.5 text-[11px] font-semibold text-fg">
                   <span className="h-1.5 w-1.5 rounded-full bg-success" aria-hidden="true" />
                   {meta.pill}
                 </span>

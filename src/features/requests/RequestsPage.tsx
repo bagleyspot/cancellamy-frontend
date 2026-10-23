@@ -95,8 +95,8 @@ export function RequestsPage() {
       <div role="tabpanel" id={panelId(ID_PREFIX, group)} aria-labelledby={tabId(ID_PREFIX, group)} className="space-y-4">
         <p className="text-sm text-muted">{it.status.groupHint[group]}</p>
         {group === 'in_progress' && (
-          <div className="rounded-xl border border-line/70 bg-surface-muted/30 p-3 text-xs text-muted flex items-center gap-2">
-            <span className="font-medium text-foreground">Scaglioni giornalieri:</span>
+          <div className="rounded-xl border border-line bg-sunken/60 p-3 text-xs text-muted flex items-center gap-2">
+            <span className="font-semibold text-fg">Scaglioni giornalieri:</span>
             <span>Le richieste email automatiche vengono inviate a gruppi di massimo 5 al giorno per garantire un invio affidabile e rispettare le quote di trasmissione.</span>
           </div>
         )}
