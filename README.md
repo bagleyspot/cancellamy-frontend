@@ -41,9 +41,23 @@ Copy nothing: there is no required `.env`. The only variable is documented in `.
 
 ## Running against the backend
 
-1. Start the backend (`cancellamy-backend`) on port 3000.
-2. `npm install && npm run dev`.
-3. Open http://localhost:5173. The dev server proxies `/api/*` to the backend, so the cookie is first-party.
+Cancellamy requires both repositories to be siblings in the same parent directory:
+
+```bash
+mkdir cancellamy-workspace && cd cancellamy-workspace
+git clone https://github.com/bagleyspot/cancellamy-backend.git
+git clone https://github.com/bagleyspot/cancellamy-frontend.git
+
+# Rapid bootstrap: starts backend (port 3010) & frontend (port 5173) together
+./start-dev.sh
+# or from this directory:
+npm run dev:all
+```
+
+When running services separately:
+1. Start the backend (`cancellamy-backend`) on port 3010 (or 3000).
+2. Run `npm install && npm run dev` (if on 3010, `VITE_PROXY_TARGET=http://127.0.0.1:3010 npm run dev`).
+3. Open http://127.0.0.1:5173. The dev server proxies `/api/*` to the backend, so the cookie is first-party.
 
 When the backend runs with `mailMode: 'dry-run'` the app shows a persistent banner and enables the
 "simula risposta" controls on request detail pages.
