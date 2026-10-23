@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * Design tokens — Incogni + Proton hybrid aesthetic.
+ * Design tokens — High-contrast privacy-first aesthetic.
  * Crisp cool-slate surfaces, deep obsidian/navy contrast blocks, royal blue/indigo primary, emerald verification.
  */
 :root {
@@ -106,7 +106,7 @@ body {
   border-radius: 6px;
 }
 
-/* Incogni / Proton inspired atmospheric hero & subtle technical grid */
+/* Atmospheric hero & subtle technical grid */
 .cnc-hero-backdrop {
   background-color: #090d16;
   background-image:

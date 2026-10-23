@@ -87,7 +87,6 @@ export function makeBroker(overrides: Partial<BrokerDto> = {}): BrokerDto {
     legalBasisNote: 'Art. 17 GDPR: cancellazione senza ingiustificato ritardo.',
     obstacles: 'Può chiedere un documento di identità.',
     idRequested: 'maybe',
-    incogniListed: true,
     sendEnabled: true,
     notes: null,
     ...overrides,
