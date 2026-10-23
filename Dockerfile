@@ -3,7 +3,7 @@ FROM node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf
 WORKDIR /app
 COPY package.json package-lock.json ./
 # The lockfile is produced with npm 11 (the base image ships npm 10).
-RUN npm install -g npm@11 && npm ci
+RUN npm install -g npm@11.14.0 && npm ci
 COPY . .
 ARG VITE_API_BASE_URL=/api/v1
 ARG VITE_SOURCE_URL
