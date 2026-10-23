@@ -153,6 +153,7 @@ export function makeRequestListItem(overrides: Partial<RequestListItem> = {}): R
     dueAt: '2026-03-03T10:06:00.000Z',
     completedAt: null,
     nextCheckAt: null,
+    nextAttemptAt: null,
     lastActivityAt: '2026-02-01T10:06:00.000Z',
     ...overrides,
   };

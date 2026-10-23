@@ -56,8 +56,10 @@ export function Tabs<Id extends string>({ tabs, value, onChange, ariaLabel, idPr
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(tab.id)}
             className={cn(
-              'flex min-h-9 shrink-0 items-center gap-2 rounded-md px-3.5 text-sm font-medium transition-all',
-              selected ? 'bg-surface text-fg shadow-2xs ring-1 ring-line' : 'text-muted hover:text-fg',
+              'flex min-h-9 shrink-0 items-center gap-2 rounded-md px-3.5 text-sm transition-all',
+              selected
+                ? 'bg-surface text-fg font-semibold shadow-2xs ring-1 ring-line'
+                : 'text-muted hover:text-fg hover:bg-surface/50 font-medium',
             )}
           >
             {tab.label}

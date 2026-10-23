@@ -82,7 +82,8 @@ Authenticated (`/app/*`): `/app` (overview), `/app/richieste` (+ `/nuova`, `/:id
 
 On the profile page (`/app/profili/:id`): "Identità" (always), "Violazioni dei dati" (`breachCheck`) and "Mittente delle email" (`senderSmtp`).
 On a request detail: evidence dossier download (`dossier`, with the timestamp option only when `dossierTimestamp`), per-message delivery label,
-attachment downloads, and for `kind: 'access'` requests a findings form.
+attachment downloads, scheduled dispatch batch badges, and for `kind: 'access'` requests a findings form.
+On activation: clear feedback on automated requests queued and scheduled dispatch batches (max 5/day fair-share policy).
 
 ## Feature flags
 
