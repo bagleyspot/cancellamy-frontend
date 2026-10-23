@@ -20,12 +20,10 @@ updates:
         patterns: ['eslint', '@eslint/*', 'typescript-eslint', 'eslint-plugin-*', 'globals']
       minor-and-patch:
         update-types: [minor, patch]
+    # Major upgrades are decided by hand (they often need code changes); known pins: @hookform/resolvers 6 fails to install, plugin-react 6 needs Vite 8.
     ignore:
-      # Deliberate pins: @hookform/resolvers v6 fails to install, plugin-react v6 needs Vite 8.
-      - dependency-name: '@hookform/resolvers'
-        update-types: ['version-update:semver-major']
-      - dependency-name: '@vitejs/plugin-react'
-        update-types: ['version-update:semver-major']
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
@@ -49,3 +47,7 @@ updates:
       default-days: 7
     commit-message:
       prefix: 'build(deps)'
+    ignore:
+      # Stay on the Node.js 22 LTS line; bump it deliberately.
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
