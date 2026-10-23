@@ -50,6 +50,18 @@ function DetailContent({ detail }: { detail: RequestDetail }) {
         </p>
         {due && <p className="text-sm font-medium">{due}</p>}
         {detail.nextCheckAt && <p className="text-sm text-muted">{t.nextCheck(formatDate(detail.nextCheckAt))}</p>}
+        {detail.status === 'queued' && (
+          <Alert tone="info" title="Richiesta in coda di invio">
+            <p>
+              {detail.nextAttemptAt
+                ? `L'invio di questa richiesta è programmato per il ${formatDate(detail.nextAttemptAt)}.`
+                : 'L’invio di questa richiesta è programmato a breve.'}
+            </p>
+            <p className="mt-1 text-xs text-muted">
+              Le richieste automatiche sono scaglionate a un massimo di 5 al giorno per utente per rispettare le quote operative del servizio, prevenire filtri antispam e garantire un accesso equo per tutti gli utenti.
+            </p>
+          </Alert>
+        )}
         {detail.status === 'action_required' && detail.actionReason && (
           <Alert tone="warning" title={t.detail.reason}>
             <p>{it.status.actionReason[detail.actionReason]}</p>
