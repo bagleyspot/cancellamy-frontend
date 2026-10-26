@@ -11,6 +11,11 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL VITE_SOURCE_URL=$VITE_SOURCE_URL
 RUN npm run build
 
 FROM nginxinc/nginx-unprivileged:1.30-alpine@sha256:f5116ed4606f3eb015dd4a8e28cb9b351476dc0ad4bc6e9f93b19cec130cdf03
+# The base image lags behind Alpine security fixes (brotli-libs, curl): upgrade OS packages, then drop root again.
+# Remove this once a newer base image already ships the fixed packages.
+USER root
+RUN apk upgrade --no-cache
+USER 101
 # API_UPSTREAM: where /api/ is proxied (same-origin keeps the refresh cookie simple). Example: https://api.example.org
 ENV API_UPSTREAM=http://localhost:3000
 COPY deploy/nginx.conf.template /etc/nginx/templates/default.conf.template
