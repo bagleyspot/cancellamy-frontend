@@ -18,7 +18,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CheckboxField, SelectField, TextField } from '@/components/ui/Field';
 import { QueryBoundary } from '@/components/ui/QueryBoundary';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { detectPreset, GMAIL_APP_PASSWORDS_URL, SENDER_PRESETS } from './senderPresets';
+import { detectPreset, SENDER_PRESETS, SENDER_PROVIDER_IDS } from './senderPresets';
 import type { SenderPresetId } from './senderPresets';
 
 const t = it.sender;
@@ -75,6 +75,7 @@ function SenderForm({ profile, sender }: { profile: ProfileDto; sender: SenderDt
     },
   });
 
+  const guide: { title: string; steps: readonly string[]; link?: string } | null = presetId === 'other' ? null : t.guides[presetId];
   const hostField = register('host');
   const fromField = register('fromAddress');
 
@@ -85,7 +86,7 @@ function SenderForm({ profile, sender }: { profile: ProfileDto; sender: SenderDt
     setValue('host', preset.host);
     setValue('port', String(preset.port));
     setValue('secure', preset.secure);
-    if (preset.usernameIsAddress) setValue('username', getValues('fromAddress'));
+    setValue('username', getValues('fromAddress')); // every preset uses the full mailbox address as user name
   };
 
   const run = (kind: 'test' | 'save') =>
@@ -135,28 +136,34 @@ function SenderForm({ profile, sender }: { profile: ProfileDto; sender: SenderDt
         aria-label={t.title}
       >
         <SelectField label={t.preset} hint={t.presetHint} value={presetId} onChange={(event) => choosePreset(event.target.value as SenderPresetId)}>
-          <option value="gmail">{t.presets.gmail}</option>
+          {SENDER_PROVIDER_IDS.map((id) => (
+            <option key={id} value={id}>
+              {t.presets[id]}
+            </option>
+          ))}
           <option value="other">{t.presets.other}</option>
         </SelectField>
-        {presetId === 'gmail' && (
-          <Alert tone="info" title={t.gmailTitle}>
+        {guide && presetId !== 'other' && (
+          <Alert tone="info" title={guide.title}>
             <ol className="list-decimal space-y-1 pl-5">
-              {t.gmailSteps.map((step) => (
+              {guide.steps.map((step) => (
                 <li key={step}>{step}</li>
               ))}
             </ol>
-            <p className="mt-2">
-              <a
-                href={GMAIL_APP_PASSWORDS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 font-medium text-primary underline"
-              >
-                {t.gmailLink}
-                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-              </a>
-            </p>
-            <p className="mt-2">{t.gmailFromNote}</p>
+            {guide.link && SENDER_PRESETS[presetId].appPasswordUrl && (
+              <p className="mt-2">
+                <a
+                  href={SENDER_PRESETS[presetId].appPasswordUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-medium text-primary underline"
+                >
+                  {guide.link}
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                </a>
+              </p>
+            )}
+            <p className="mt-2">{t.fromNote}</p>
           </Alert>
         )}
         <div className="grid gap-4 sm:grid-cols-3">
@@ -201,7 +208,7 @@ function SenderForm({ profile, sender }: { profile: ProfileDto; sender: SenderDt
           {...fromField}
           onChange={(event) => {
             void fromField.onChange(event);
-            if (presetId !== 'other' && SENDER_PRESETS[presetId].usernameIsAddress) setValue('username', event.target.value);
+            if (presetId !== 'other') setValue('username', event.target.value);
           }}
         >
           {profile.emails.map((email) => (

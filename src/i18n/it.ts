@@ -980,16 +980,58 @@ export const it = {
     lastErrorBody: 'Controlla le impostazioni e salvale di nuovo: le richieste in attesa ripartiranno.',
     current: (host: string, port: number, from: string) => `Server ${host}:${port}, mittente ${from}`,
     preset: 'Provider di posta',
-    presetHint: 'Scegli Gmail per compilare in automatico server, porta e cifratura.',
-    presets: { gmail: 'Gmail', other: 'Altro server SMTP' },
-    gmailTitle: 'Come collegare Gmail',
-    gmailSteps: [
-      'Attiva la verifica in due passaggi sul tuo account Google (se non l’hai già fatto).',
-      'Crea una password per le app: sono 16 caratteri, diversa dalla password di Google.',
-      'Incollala qui sotto nel campo “Password per le app”, poi premi “Prova la connessione”.',
-    ],
-    gmailLink: 'Crea una password per le app Google',
-    gmailFromNote: 'Con Gmail il mittente deve essere l’indirizzo Gmail che stai collegando: Google sostituisce qualsiasi altro indirizzo.',
+    presetHint: 'Scegli il tuo provider per compilare in automatico server, porta e cifratura.',
+    presets: {
+      gmail: 'Gmail',
+      icloud: 'iCloud Mail',
+      yahoo: 'Yahoo Mail',
+      libero: 'Libero Mail',
+      aruba: 'Aruba (casella su dominio)',
+      other: 'Altro server SMTP',
+    } satisfies Record<'gmail' | 'icloud' | 'yahoo' | 'libero' | 'aruba' | 'other', string>,
+    guides: {
+      gmail: {
+        title: 'Come collegare Gmail',
+        steps: [
+          'Attiva la verifica in due passaggi sul tuo account Google (se non l’hai già fatto).',
+          'Crea una password per le app: sono 16 caratteri, diversa dalla password di Google.',
+          'Incollala qui sotto nel campo “Password per le app”, poi premi “Prova la connessione”.',
+        ],
+        link: 'Crea una password per le app Google',
+      },
+      icloud: {
+        title: 'Come collegare iCloud Mail',
+        steps: [
+          'Il tuo Apple Account deve avere l’autenticazione a due fattori attiva.',
+          'Su account.apple.com, in “Accesso e sicurezza”, crea una password specifica per l’app.',
+          'Incollala qui sotto nel campo “Password per le app”: il nome utente è il tuo indirizzo iCloud completo.',
+        ],
+        link: 'Apri il tuo Apple Account',
+      },
+      yahoo: {
+        title: 'Come collegare Yahoo Mail',
+        steps: [
+          'Nelle impostazioni di sicurezza dell’account Yahoo genera una password per le app.',
+          'Incollala qui sotto nel campo “Password per le app”: il nome utente è il tuo indirizzo Yahoo completo.',
+        ],
+        link: 'Apri la sicurezza dell’account Yahoo',
+      },
+      libero: {
+        title: 'Come collegare Libero Mail',
+        steps: [
+          'Il nome utente è il tuo indirizzo Libero completo.',
+          'Se con la password normale la connessione viene rifiutata, crea una password per le app dall’area account della webmail Libero e usa quella.',
+        ],
+      },
+      aruba: {
+        title: 'Come collegare una casella Aruba',
+        steps: [
+          'Il nome utente è il tuo indirizzo email completo e la password è quella della casella.',
+          'Questi valori valgono per le caselle su dominio gestite da Aruba. Per le caselle @aruba.it il server è smtp.aruba.it: puoi correggerlo nel campo qui sotto.',
+        ],
+      },
+    } satisfies Record<'gmail' | 'icloud' | 'yahoo' | 'libero' | 'aruba', { title: string; steps: readonly string[]; link?: string }>,
+    fromNote: 'Usa come mittente l’indirizzo della casella che stai collegando: molti provider rifiutano o sostituiscono qualsiasi altro indirizzo.',
     host: 'Server SMTP',
     hostHint: 'Ad esempio smtp.gmail.com. Sono accettati solo server pubblici.',
     port: 'Porta',

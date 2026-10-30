@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import type { SetSenderRequest, SmtpSettingsInput } from '@/api/types';
@@ -86,6 +86,28 @@ describe('profile: sender card', () => {
 
     await user.selectOptions(screen.getByLabelText('Indirizzo mittente'), 'mario.rossi@example.org');
     expect(screen.getByLabelText('Nome utente')).toHaveValue('mario.rossi@example.org');
+  });
+
+  it.each([
+    ['icloud', 'Come collegare iCloud Mail', 'smtp.mail.me.com', '587', false, 'https://account.apple.com/account/manage'],
+    ['yahoo', 'Come collegare Yahoo Mail', 'smtp.mail.yahoo.com', '465', true, 'https://login.yahoo.com/account/security'],
+    ['libero', 'Come collegare Libero Mail', 'smtp.libero.it', '465', true, null],
+    ['aruba', 'Come collegare una casella Aruba', 'smtps.aruba.it', '465', true, null],
+  ])('fills the %s preset and shows its guide', async (provider, guideTitle, host, port, secure, linkHref) => {
+    const user = userEvent.setup();
+    openProfile();
+    await user.selectOptions(await screen.findByLabelText('Provider di posta'), provider);
+
+    expect(screen.getByLabelText('Server SMTP')).toHaveValue(host);
+    expect(screen.getByLabelText('Porta')).toHaveValue(port);
+    const tls = screen.getByLabelText(/Connessione cifrata fin dall’inizio/);
+    if (secure) expect(tls).toBeChecked();
+    else expect(tls).not.toBeChecked();
+    expect(screen.getByLabelText('Nome utente')).toHaveValue('mario@example.it');
+    const guide = screen.getByText(guideTitle).closest('[role="status"]') as HTMLElement;
+    const links = within(guide).queryAllByRole('link');
+    if (linkHref) expect(links.map((link) => link.getAttribute('href'))).toContain(linkHref);
+    else expect(links).toHaveLength(0);
   });
 
   it('shows the Gmail guide when Gmail is already configured, and hides it after switching to another server', async () => {
