@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail, Plug, Undo2 } from 'lucide-react';
+import { ExternalLink, Mail, Plug, Undo2 } from 'lucide-react';
 import { z } from 'zod';
 import { isApiError } from '@/api/http';
 import { useSenderActions } from '@/api/mutations';
@@ -18,6 +18,8 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CheckboxField, SelectField, TextField } from '@/components/ui/Field';
 import { QueryBoundary } from '@/components/ui/QueryBoundary';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { detectPreset, GMAIL_APP_PASSWORDS_URL, SENDER_PRESETS } from './senderPresets';
+import type { SenderPresetId } from './senderPresets';
 
 const t = it.sender;
 const v = it.validation;
@@ -55,9 +57,12 @@ function SenderForm({ profile, sender }: { profile: ProfileDto; sender: SenderDt
   const [confirmReset, setConfirmReset] = useState(false);
 
   const smtp = sender.smtp;
+  const [presetId, setPresetId] = useState<SenderPresetId>(detectPreset(smtp?.host));
   const {
     register,
     handleSubmit,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -69,6 +74,19 @@ function SenderForm({ profile, sender }: { profile: ProfileDto; sender: SenderDt
       fromAddress: smtp?.fromAddress ?? profile.emails[0] ?? '',
     },
   });
+
+  const hostField = register('host');
+  const fromField = register('fromAddress');
+
+  const choosePreset = (id: SenderPresetId) => {
+    setPresetId(id);
+    if (id === 'other') return;
+    const preset = SENDER_PRESETS[id];
+    setValue('host', preset.host);
+    setValue('port', String(preset.port));
+    setValue('secure', preset.secure);
+    if (preset.usernameIsAddress) setValue('username', getValues('fromAddress'));
+  };
 
   const run = (kind: 'test' | 'save') =>
     handleSubmit(async (values) => {
@@ -116,9 +134,44 @@ function SenderForm({ profile, sender }: { profile: ProfileDto; sender: SenderDt
         className="space-y-4"
         aria-label={t.title}
       >
+        <SelectField label={t.preset} hint={t.presetHint} value={presetId} onChange={(event) => choosePreset(event.target.value as SenderPresetId)}>
+          <option value="gmail">{t.presets.gmail}</option>
+          <option value="other">{t.presets.other}</option>
+        </SelectField>
+        {presetId === 'gmail' && (
+          <Alert tone="info" title={t.gmailTitle}>
+            <ol className="list-decimal space-y-1 pl-5">
+              {t.gmailSteps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+            <p className="mt-2">
+              <a
+                href={GMAIL_APP_PASSWORDS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 font-medium text-primary underline"
+              >
+                {t.gmailLink}
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              </a>
+            </p>
+            <p className="mt-2">{t.gmailFromNote}</p>
+          </Alert>
+        )}
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="sm:col-span-2">
-            <TextField label={t.host} hint={t.hostHint} autoComplete="off" error={errors.host?.message} {...register('host')} />
+            <TextField
+              label={t.host}
+              hint={t.hostHint}
+              autoComplete="off"
+              error={errors.host?.message}
+              {...hostField}
+              onChange={(event) => {
+                void hostField.onChange(event);
+                if (presetId !== 'other' && event.target.value.trim().toLowerCase() !== SENDER_PRESETS[presetId].host) setPresetId('other');
+              }}
+            />
           </div>
           <SelectField label={t.port} error={errors.port?.message} {...register('port')}>
             {PORTS.map((port) => (
@@ -141,7 +194,16 @@ function SenderForm({ profile, sender }: { profile: ProfileDto; sender: SenderDt
             onChange={() => setPasswordError(undefined)}
           />
         </div>
-        <SelectField label={t.fromAddress} hint={t.fromAddressHint} error={errors.fromAddress?.message} {...register('fromAddress')}>
+        <SelectField
+          label={t.fromAddress}
+          hint={t.fromAddressHint}
+          error={errors.fromAddress?.message}
+          {...fromField}
+          onChange={(event) => {
+            void fromField.onChange(event);
+            if (presetId !== 'other' && SENDER_PRESETS[presetId].usernameIsAddress) setValue('username', event.target.value);
+          }}
+        >
           {profile.emails.map((email) => (
             <option key={email} value={email}>
               {email}
