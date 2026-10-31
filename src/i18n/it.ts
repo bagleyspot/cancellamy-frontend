@@ -22,6 +22,19 @@ import type {
 } from '@/api/types';
 
 /** All user-facing copy (Italian). Code, identifiers and comments stay in English. */
+export interface LegalSection {
+  title: string;
+  paragraphs: readonly string[];
+}
+
+/** What the privacy notice and the terms need to know about the instance they describe. */
+export interface LegalContext {
+  operator: string;
+  address: string;
+  email: string;
+  retentionDays: number;
+}
+
 export const it = {
   brand: {
     name: 'Cancellamy',
@@ -113,6 +126,10 @@ export const it = {
   banner: {
     dryRun: 'Modalità prova: nessuna email reale viene inviata ai broker',
     dryRunHint: 'Puoi simulare le risposte dei broker per vedere come funziona il flusso.',
+    mailbox: 'Modalità casella personale: le email partono dalla tua casella, non da Cancellamy',
+    mailboxHint: 'Le risposte dei broker arrivano direttamente a te: segna l’esito di ogni richiesta dall’app.',
+    mailboxRedirect: 'Modalità test: ogni email destinata a un broker viene deviata a un tuo indirizzo di prova',
+    mailboxRedirectHint: 'Nessun broker riceve nulla finché chi gestisce l’istanza non toglie la deviazione.',
     verifyEmailTitle: 'Verifica la tua email',
     verifyEmailBody:
       'Puoi esplorare Cancellamy, ma per creare o attivare un profilo devi prima confermare il tuo indirizzo email. Controlla la posta (anche lo spam).',
@@ -465,32 +482,172 @@ export const it = {
   },
 
   legal: {
-    draftNotice: 'Testo segnaposto: questa pagina deve essere rivista da un legale prima della pubblicazione del servizio.',
-    updated: 'Ultimo aggiornamento: da definire',
+    draftNotice:
+      'Bozza completa ma non ancora rivista da un legale: va verificata da un professionista prima di offrire il servizio ad altre persone.',
+    updated: 'Ultimo aggiornamento: 31 ottobre 2026',
     contactTitle: 'Contatti',
     contactBody: (email: string) => `Per qualsiasi domanda scrivi a ${email}.`,
     contactFallback: 'Per qualsiasi domanda usa il canale di contatto indicato nel repository del progetto.',
     privacy: {
       title: 'Informativa sulla privacy',
-      sections: [
-        { title: 'Titolare del trattamento', paragraphs: ['Il titolare del trattamento è [DA COMPLETARE: denominazione e indirizzo del gestore del servizio].'] },
-        { title: 'Quali dati trattiamo', paragraphs: ['Dati dell’account (email e password in forma protetta), dati dei profili che inserisci (nome, data di nascita, email, telefoni, indirizzi, codice fiscale facoltativo), richieste inviate e relativi messaggi scambiati con i broker.', 'Se un broker lo richiede, puoi caricare un documento di identità: viene inoltrato al broker e non viene conservato da Cancellamy.'] },
-        { title: 'Perché li trattiamo e su quale base', paragraphs: ['Per eseguire il servizio che hai richiesto (inviare richieste di cancellazione a tuo nome) sulla base del contratto e della delega che firmi, e per gli obblighi di sicurezza e di legge.'] },
-        { title: 'A chi li comunichiamo', paragraphs: ['I dati dei profili sono comunicati ai broker destinatari delle richieste, nella misura necessaria a identificarti. Ci avvaliamo di fornitori tecnici per hosting e invio email, vincolati da accordi sul trattamento dei dati.'] },
-        { title: 'Per quanto tempo li conserviamo', paragraphs: ['Fino a quando mantieni l’account. Puoi eliminare account, profili, richieste e messaggi in ogni momento dalle impostazioni: la cancellazione è definitiva.'] },
-        { title: 'I tuoi diritti', paragraphs: ['Puoi accedere ai tuoi dati (esportazione dalle impostazioni), rettificarli, cancellarli, limitarne il trattamento e opporti. Hai inoltre diritto di proporre reclamo al Garante per la protezione dei dati personali.'] },
-        { title: 'Cookie', paragraphs: ['Usiamo soltanto un cookie tecnico necessario a mantenere la sessione. Non usiamo cookie di profilazione né strumenti di analisi di terze parti.'] },
+      sections: (c: LegalContext): LegalSection[] => [
+        {
+          title: 'Titolare del trattamento',
+          paragraphs: [
+            `Il titolare del trattamento è ${c.operator}${c.address ? `, con recapito in ${c.address}` : ''}.`,
+            `Per esercitare i tuoi diritti o per qualsiasi domanda sul trattamento dei tuoi dati scrivi a ${c.email}.`,
+            'Cancellamy è software libero (AGPL-3.0): ogni istanza è gestita da un soggetto diverso, che è il titolare dei dati trattati dalla propria istanza. Chi sviluppa il progetto non ha accesso ai dati delle istanze gestite da altri.',
+          ],
+        },
+        {
+          title: 'Quali dati trattiamo',
+          paragraphs: [
+            'Dati dell’account: indirizzo email e password (conservata solo come hash con algoritmo argon2id), esito della verifica dell’email e informazioni di sicurezza, come i tentativi di accesso falliti.',
+            'Dati dei profili che inserisci: nome e cognome, eventuali altre grafie del nome, data di nascita, indirizzi email, numeri di telefono, indirizzi e, se vuoi, codice fiscale. Sono conservati cifrati.',
+            'Delega e richieste: il testo della delega firmata, il nome digitato come firma, data e ora, l’impronta (hash) dell’indirizzo IP e lo user agent al momento della firma, le richieste inviate ai broker, i messaggi scambiati e gli allegati ricevuti.',
+            'Documenti di identità: se un broker li richiede li carichi tu; vengono inoltrati al broker e non vengono conservati.',
+            'Casella di posta collegata (facoltativa): le credenziali SMTP o l’autorizzazione di Google, limitata al solo invio di email, sono conservate cifrate. Non leggiamo la tua casella.',
+            'Funzioni facoltative, se attive su questa istanza: verifica del telefono con SMS, controllo delle violazioni dei dati, deindicizzazione e registro del telemarketing (contenuti che inserisci tu).',
+          ],
+        },
+        {
+          title: 'Perché li trattiamo e su quale base',
+          paragraphs: [
+            'Per fornirti il servizio che richiedi, cioè creare l’account, preparare, inviare e seguire le richieste di cancellazione e opposizione a tuo nome e avvisarti di scadenze e risposte: la base giuridica è l’esecuzione del contratto e della delega che firmi (art. 6, par. 1, lett. b GDPR).',
+            'Per la sicurezza del servizio e per prevenire abusi, ad esempio iscrizioni con dati altrui: il legittimo interesse del titolare (art. 6, par. 1, lett. f GDPR).',
+            'Per le funzioni facoltative che attivi, come la casella di posta collegata o la verifica con SMS: il tuo consenso (art. 6, par. 1, lett. a GDPR), che puoi revocare disattivando la funzione.',
+            'Per adempiere agli obblighi di legge, quando previsti (art. 6, par. 1, lett. c GDPR).',
+          ],
+        },
+        {
+          title: 'Natura del conferimento',
+          paragraphs: [
+            'Per usare il servizio sono necessari i dati dell’account e quelli del profilo indicati come obbligatori: senza di essi non possiamo scrivere ai broker. Codice fiscale e telefono sono facoltativi, ma possono aiutare i broker a riconoscerti.',
+          ],
+        },
+        {
+          title: 'A chi li comunichiamo',
+          paragraphs: [
+            'Ai broker e agli altri soggetti destinatari delle richieste, nella misura necessaria a identificarti e a gestire la richiesta; ricevono anche la delega firmata.',
+            'A fornitori tecnici che trattano i dati per conto del titolare: hosting e database, invio email (oppure la tua casella di posta e il suo gestore, se la colleghi), SMS e altri servizi solo se attivati. Sono vincolati da un accordo sul trattamento dei dati (art. 28 GDPR).',
+            'Alle autorità pubbliche, quando la legge lo richiede. Non vendiamo né cediamo i tuoi dati a terzi per finalità di marketing.',
+          ],
+        },
+        {
+          title: 'Trasferimenti verso paesi terzi',
+          paragraphs: [
+            'Alcuni fornitori o broker possono trovarsi fuori dallo Spazio economico europeo. In tal caso il trasferimento avviene solo sulla base di una decisione di adeguatezza o di altre garanzie previste dagli artt. 44 e seguenti del GDPR, ad esempio le clausole contrattuali standard. Se colleghi Gmail, i messaggi che invii passano dai server di Google.',
+          ],
+        },
+        {
+          title: 'Per quanto tempo li conserviamo',
+          paragraphs: [
+            'Account, profili, richieste e messaggi restano finché mantieni l’account. Puoi eliminare tutto in qualsiasi momento dalle impostazioni: la cancellazione è definitiva.',
+            `Gli allegati ricevuti dai broker, ad esempio la copia dei dati richiesta con l’accesso, restano scaricabili per ${c.retentionDays} giorni e poi vengono eliminati. I codici di verifica scadono dopo pochi minuti.`,
+            'Se revochi la delega, le richieste non ancora inviate vengono annullate; i dati dell’account restano finché non lo elimini.',
+          ],
+        },
+        {
+          title: 'Come proteggiamo i dati',
+          paragraphs: [
+            'I dati dei profili, i messaggi, le firme e le credenziali della casella collegata sono cifrati a livello di campo (AES-256-GCM); le password sono conservate solo come hash. I documenti di identità non vengono conservati. L’accesso ai dati è limitato a chi gestisce l’istanza.',
+          ],
+        },
+        {
+          title: 'Processi decisionali automatizzati',
+          paragraphs: [
+            'Non prendiamo decisioni basate unicamente su trattamenti automatizzati che producano effetti giuridici nei tuoi confronti. La classificazione automatica delle risposte dei broker è solo un aiuto: l’esito di ogni richiesta lo confermi tu.',
+          ],
+        },
+        {
+          title: 'I tuoi diritti',
+          paragraphs: [
+            `Hai diritto di accedere ai tuoi dati (puoi esportarli dalle impostazioni), di rettificarli, di ottenerne la cancellazione, di limitarne il trattamento, di opporti e di riceverli in un formato strutturato (artt. 15-22 GDPR). Puoi esercitare questi diritti dalle impostazioni dell’app o scrivendo a ${c.email}.`,
+            'Se ritieni che il trattamento violi il GDPR puoi proporre reclamo al Garante per la protezione dei dati personali (www.garanteprivacy.it) o agire davanti all’autorità giudiziaria.',
+          ],
+        },
+        {
+          title: 'Minori',
+          paragraphs: [
+            'Il servizio è destinato a persone maggiorenni. Un genitore, o chi esercita la responsabilità genitoriale, può creare un profilo per un figlio minorenne sotto la propria responsabilità.',
+          ],
+        },
+        {
+          title: 'Cookie',
+          paragraphs: [
+            'Usiamo soltanto un cookie tecnico necessario a mantenere la sessione. Non usiamo cookie di profilazione né strumenti di analisi di terze parti.',
+          ],
+        },
+        {
+          title: 'Modifiche a questa informativa',
+          paragraphs: ['Possiamo aggiornare questa informativa; le modifiche rilevanti saranno comunicate nell’app. La data dell’ultimo aggiornamento è indicata in alto.'],
+        },
       ],
     },
     terms: {
       title: 'Termini di servizio',
-      sections: [
-        { title: 'Oggetto del servizio', paragraphs: ['Cancellamy è uno strumento gratuito e open source (AGPL-3.0) che prepara, invia e monitora richieste di cancellazione e di opposizione ai sensi degli artt. 17 e 21 GDPR.'] },
-        { title: 'Delega', paragraphs: ['Con la firma dell’autorizzazione ci incarichi di scrivere ai broker a tuo nome. Puoi revocarla in ogni momento; le richieste non ancora inviate vengono annullate.'] },
-        { title: 'Nessuna garanzia di risultato', paragraphs: ['Non garantiamo che i broker cancellino i dati, né i tempi di risposta. Il servizio non costituisce consulenza legale.'] },
-        { title: 'Obblighi dell’utente', paragraphs: ['Dichiari che i dati inseriti sono veritieri e che agisci solo per te stesso o per persone per cui hai titolo a farlo (ad esempio i tuoi figli minorenni).'] },
-        { title: 'Limitazione di responsabilità', paragraphs: ['Nei limiti consentiti dalla legge, il servizio è fornito “così com’è”, senza garanzie, e il gestore non risponde di danni indiretti derivanti dall’uso o dal mancato funzionamento dello stesso.'] },
-        { title: 'Modifiche e legge applicabile', paragraphs: ['Possiamo aggiornare questi termini; le modifiche rilevanti saranno comunicate nell’app. Si applica la legge italiana.'] },
+      sections: (c: LegalContext): LegalSection[] => [
+        {
+          title: 'Chi gestisce il servizio',
+          paragraphs: [
+            `Questa istanza di Cancellamy è gestita da ${c.operator}${c.address ? `, con recapito in ${c.address}` : ''}. Per contattarci: ${c.email}.`,
+            'Cancellamy è software libero e open source (AGPL-3.0): chi lo gestisce risponde della propria istanza.',
+          ],
+        },
+        {
+          title: 'Oggetto del servizio',
+          paragraphs: [
+            'Cancellamy è uno strumento gratuito che prepara, invia e monitora richieste di cancellazione e di opposizione ai sensi degli artt. 17 e 21 GDPR (e altri diritti connessi) verso data broker e soggetti analoghi, e ti aiuta a seguire le scadenze e a preparare un reclamo al Garante.',
+          ],
+        },
+        {
+          title: 'Account e requisiti',
+          paragraphs: [
+            'Per usare il servizio devi essere maggiorenne e fornire un indirizzo email che controlli. Sei responsabile della riservatezza delle tue credenziali.',
+            'Puoi creare profili solo per te stesso o per persone di cui hai titolo a esercitare i diritti, ad esempio i tuoi figli minorenni.',
+          ],
+        },
+        {
+          title: 'Delega',
+          paragraphs: [
+            'Con la firma della delega ci conferisci mandato di scrivere ai destinatari a tuo nome per esercitare i diritti indicati nel testo. Puoi revocarla in ogni momento dall’area personale: la revoca ferma l’invio di nuove richieste e solleciti, ma non annulla quelle già inviate.',
+            'Le richieste possono partire da un indirizzo del servizio oppure, se la colleghi, dalla tua casella di posta. In quest’ultimo caso sei tu a rispondere del rispetto delle condizioni del tuo gestore di posta (ad esempio i limiti di invio).',
+          ],
+        },
+        {
+          title: 'Dati veritieri e uso corretto',
+          paragraphs: [
+            'Dichiari che i dati inseriti sono veritieri e che agisci solo per te stesso o per persone per cui hai titolo a farlo. Non puoi usare il servizio per sostituirti ad altri, per inviare richieste infondate o in modo abusivo, né per aggirare le misure di sicurezza.',
+          ],
+        },
+        {
+          title: 'Nessuna garanzia di risultato',
+          paragraphs: [
+            'Non possiamo garantire che i destinatari cancellino i dati, né i tempi o il contenuto della loro risposta: ogni titolare decide in base alla legge, e alcuni possono rifiutare. Il servizio non è uno studio legale e non costituisce consulenza legale.',
+          ],
+        },
+        {
+          title: 'Gratuità e sospensione',
+          paragraphs: [
+            'Il servizio è offerto gratuitamente e può essere modificato, sospeso o interrotto. Possiamo sospendere o chiudere un account in caso di uso abusivo o per ragioni di sicurezza. Puoi eliminare il tuo account in qualsiasi momento dalle impostazioni.',
+          ],
+        },
+        {
+          title: 'Limitazione di responsabilità',
+          paragraphs: [
+            'Nei limiti consentiti dalla legge, il servizio è fornito “così com’è”, senza garanzie, e chi lo gestisce non risponde dei danni indiretti derivanti dall’uso o dal mancato funzionamento. Restano ferme le responsabilità che la legge non permette di escludere, in particolare per dolo o colpa grave, e i diritti inderogabili dei consumatori.',
+          ],
+        },
+        {
+          title: 'Dati personali',
+          paragraphs: ['Il trattamento dei tuoi dati è descritto nell’informativa sulla privacy.'],
+        },
+        {
+          title: 'Modifiche e legge applicabile',
+          paragraphs: [
+            'Possiamo aggiornare questi termini; le modifiche rilevanti saranno comunicate nell’app. Si applica la legge italiana; per i consumatori resta fermo il foro del luogo di residenza o domicilio.',
+          ],
+        },
       ],
     },
   },
@@ -892,7 +1049,7 @@ export const it = {
       messagesIn: 'Messaggi ricevuti',
       unmatched: 'Posta non abbinata',
       mailMode: 'Modalità email',
-      mailModes: { 'dry-run': 'Prova (nessun invio reale)', resend: 'Invio reale' } as const,
+      mailModes: { 'dry-run': 'Prova (nessun invio reale)', resend: 'Invio reale', mailbox: 'Invio reale dalla casella dell’utente' } as const,
       byStatus: 'Richieste per stato',
     },
     brokers: {
@@ -971,6 +1128,8 @@ export const it = {
     loadError: 'Non siamo riusciti a caricare le impostazioni del mittente.',
     mode: { cancellamy: 'Da Cancellamy', smtp: 'Dalla tua casella', gmail: 'Dal tuo Gmail' } satisfies Record<SenderMode, string>,
     modeLabel: 'Modalità attuale',
+    replyNoteMailbox: (address: string) =>
+      `In questa istanza le email partono dalla tua casella e i broker rispondono direttamente a te, all’indirizzo ${address}: segna l’esito di ogni richiesta dall’app.`,
     replyNote: (address: string) =>
       `Quando scrivi dalla tua casella, le email partono dal tuo indirizzo ma le risposte dei broker arrivano comunque a Cancellamy, all’indirizzo ${address}: così possiamo seguirle per te.`,
     appPasswordTip: 'Usa una password per le app (quella dedicata, non la password principale della tua email): la maggior parte dei provider permette di crearne una.',
