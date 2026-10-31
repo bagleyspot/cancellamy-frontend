@@ -1,26 +1,30 @@
 import { useConfig } from '@/api/queries';
 import { it } from '@/i18n/it';
+import type { LegalContext, LegalSection } from '@/i18n/it';
 import { Alert } from '@/components/ui/Alert';
-
-interface LegalSection {
-  title: string;
-  paragraphs: readonly string[];
-}
 
 interface LegalPageProps {
   title: string;
-  sections: readonly LegalSection[];
+  sections: (context: LegalContext) => readonly LegalSection[];
 }
+
+const FALLBACK_OPERATOR = 'il gestore di questa istanza';
 
 function LegalPage({ title, sections }: LegalPageProps) {
   const { data } = useConfig();
   const t = it.legal;
+  const context: LegalContext = {
+    operator: data?.operatorName.trim() || FALLBACK_OPERATOR,
+    address: data?.operatorAddress.trim() ?? '',
+    email: data?.supportEmail ?? '',
+    retentionDays: data?.attachmentRetentionDays ?? 30,
+  };
   return (
     <article className="mx-auto max-w-3xl space-y-6 px-4 py-10 sm:px-6 sm:py-14">
       <h1 className="text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">{title}</h1>
       <Alert tone="warning">{t.draftNotice}</Alert>
       <p className="text-sm text-muted">{t.updated}</p>
-      {sections.map((section) => (
+      {sections(context).map((section) => (
         <section key={section.title} className="space-y-2">
           <h2 className="text-xl font-semibold">{section.title}</h2>
           {section.paragraphs.map((paragraph) => (

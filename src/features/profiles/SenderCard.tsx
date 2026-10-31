@@ -5,7 +5,7 @@ import { ExternalLink, Mail, Plug, Undo2, Unplug } from 'lucide-react';
 import { z } from 'zod';
 import { isApiError } from '@/api/http';
 import { useGmailConnect, useSenderActions } from '@/api/mutations';
-import { useFeatures, useSender } from '@/api/queries';
+import { useConfig, useFeatures, useSender } from '@/api/queries';
 import type { ProfileDto, SenderDto, SmtpSettingsInput } from '@/api/types';
 import { it } from '@/i18n/it';
 import { describeError, isFeatureDisabled } from '@/lib/errors';
@@ -261,6 +261,7 @@ function SenderForm({ profile, sender }: { profile: ProfileDto; sender: SenderDt
 }
 
 function SenderStatus({ sender }: { sender: SenderDto }) {
+  const mailbox = useConfig().data?.mailMode === 'mailbox';
   return (
     <div className="space-y-2">
       <p className="text-sm">
@@ -283,7 +284,7 @@ function SenderStatus({ sender }: { sender: SenderDto }) {
           <p>{t.lastErrorBody}</p>
         </Alert>
       )}
-      <p className="text-sm text-muted">{t.replyNote(sender.replyAddress)}</p>
+      <p className="text-sm text-muted">{mailbox ? t.replyNoteMailbox(sender.replyAddress) : t.replyNote(sender.replyAddress)}</p>
     </div>
   );
 }

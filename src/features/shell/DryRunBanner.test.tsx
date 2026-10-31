@@ -21,4 +21,17 @@ describe('DryRunBanner', () => {
     await waitFor(() => expect(queryClient.getQueryData(queryKeys.config)).toBeDefined());
     expect(screen.queryByText(/Modalità prova/)).not.toBeInTheDocument();
   });
+
+  it('says that emails leave from the own mailbox in mailbox mode', async () => {
+    server.use(http.get(apiUrl('/config'), () => HttpResponse.json(makeConfig({ mailMode: 'mailbox', mailRedirect: false }))));
+    renderWithProviders(<DryRunBanner />);
+    expect(await screen.findByText('Modalità casella personale: le email partono dalla tua casella, non da Cancellamy')).toBeInTheDocument();
+    expect(screen.queryByText(/Modalità prova/)).not.toBeInTheDocument();
+  });
+
+  it('says that emails are diverted to a test address when the redirect is on', async () => {
+    server.use(http.get(apiUrl('/config'), () => HttpResponse.json(makeConfig({ mailMode: 'mailbox', mailRedirect: true }))));
+    renderWithProviders(<DryRunBanner />);
+    expect(await screen.findByText('Modalità test: ogni email destinata a un broker viene deviata a un tuo indirizzo di prova')).toBeInTheDocument();
+  });
 });
