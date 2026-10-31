@@ -4,6 +4,7 @@ export type Tone = 'neutral' | 'info' | 'success' | 'warning' | 'danger' | 'acce
 
 /** Mirrors the contract: UI grouping of request statuses (same four tabs as the dashboard). */
 export const GROUP_OF_STATUS: Record<RequestStatus, RequestGroup> = {
+  draft: 'to_send',
   queued: 'in_progress',
   sent: 'in_progress',
   replied: 'in_progress',
@@ -16,6 +17,7 @@ export const GROUP_OF_STATUS: Record<RequestStatus, RequestGroup> = {
 };
 
 export const STATUS_TONE: Record<RequestStatus, Tone> = {
+  draft: 'accent',
   queued: 'neutral',
   sent: 'info',
   replied: 'info',
@@ -28,19 +30,21 @@ export const STATUS_TONE: Record<RequestStatus, Tone> = {
 };
 
 export const GROUP_TONE: Record<RequestGroup, Tone> = {
+  to_send: 'accent',
   in_progress: 'info',
   action_required: 'accent',
   completed: 'success',
   not_removable: 'neutral',
 };
 
-export const REQUEST_GROUPS: RequestGroup[] = ['in_progress', 'action_required', 'completed', 'not_removable'];
+export const REQUEST_GROUPS: RequestGroup[] = ['to_send', 'in_progress', 'action_required', 'completed', 'not_removable'];
 
 export function groupOfStatus(status: RequestStatus): RequestGroup {
   return GROUP_OF_STATUS[status];
 }
 
 const CANCELLABLE: ReadonlySet<RequestStatus> = new Set([
+  'draft',
   'queued',
   'sent',
   'replied',
