@@ -237,6 +237,8 @@ export const it = {
       VALIDATION_ERROR: 'Alcuni dati non sono validi. Controlla i campi e riprova.',
       SMTP_CONNECTION_FAILED: 'Non riusciamo a collegarci al tuo server di posta. Controlla server, porta, nome utente e password per le app.',
       SMTP_HOST_NOT_ALLOWED: 'Questo server non è ammesso: usa un server SMTP pubblico sulle porte 25, 465, 587 o 2525.',
+      GMAIL_AUTH_FAILED: 'Non siamo riusciti a completare il collegamento con Google. Riprova dall’inizio e consenti l’invio di email.',
+      GMAIL_ADDRESS_NOT_IN_PROFILE: 'L’account Google scelto non corrisponde a nessun indirizzo email di questo profilo. Aggiungi l’indirizzo al profilo oppure scegli l’account giusto.',
       IDENTITY_REQUIRED: 'Prima devi verificare l’identità del profilo.',
       VERIFICATION_CODE_INVALID: 'Il codice non è corretto o è scaduto. Controlla le 6 cifre oppure richiedine uno nuovo.',
       VERIFICATION_RATE_LIMITED: 'Hai richiesto troppi codici ravvicinati. Attendi qualche minuto e riprova.',
@@ -967,7 +969,7 @@ export const it = {
     title: 'Mittente delle email',
     intro: 'Di norma le richieste partono da Cancellamy. Se preferisci, possono partire dalla tua casella di posta: i broker vedranno il tuo indirizzo come mittente.',
     loadError: 'Non siamo riusciti a caricare le impostazioni del mittente.',
-    mode: { cancellamy: 'Da Cancellamy', smtp: 'Dalla tua casella' } satisfies Record<SenderMode, string>,
+    mode: { cancellamy: 'Da Cancellamy', smtp: 'Dalla tua casella', gmail: 'Dal tuo Gmail' } satisfies Record<SenderMode, string>,
     modeLabel: 'Modalità attuale',
     replyNote: (address: string) =>
       `Quando scrivi dalla tua casella, le email partono dal tuo indirizzo ma le risposte dei broker arrivano comunque a Cancellamy, all’indirizzo ${address}: così possiamo seguirle per te.`,
@@ -1031,6 +1033,21 @@ export const it = {
         ],
       },
     } satisfies Record<'gmail' | 'icloud' | 'yahoo' | 'libero' | 'aruba', { title: string; steps: readonly string[]; link?: string }>,
+    gmail: {
+      title: 'Collega con Google',
+      body: 'Le richieste partono dal tuo Gmail, senza password da incollare. Chiediamo solo il permesso di inviare email: non leggiamo la tua casella e trovi i messaggi nella cartella “Posta inviata”.',
+      addressNote: 'Uno degli indirizzi del profilo deve essere l’account Google che scegli.',
+      connect: 'Collega con Google',
+      reconnect: 'Ricollega',
+      connected: (email: string) => `Collegato a ${email}`,
+      authorizedAt: (date: string) => `Autorizzato il ${date}`,
+      disconnect: 'Scollega',
+      disconnectTitle: 'Scollegare Gmail?',
+      disconnectBody: 'Le prossime email partiranno da Cancellamy e revocheremo l’accesso anche presso Google.',
+      disconnectConfirm: 'Sì, scollega',
+      disconnectDone: 'Gmail scollegato: ora le email partono da Cancellamy.',
+      orSmtp: 'Oppure usa un altro provider con una password per le app:',
+    },
     fromNote: 'Usa come mittente l’indirizzo della casella che stai collegando: molti provider rifiutano o sostituiscono qualsiasi altro indirizzo.',
     host: 'Server SMTP',
     hostHint: 'Ad esempio smtp.gmail.com. Sono accettati solo server pubblici.',
@@ -1054,6 +1071,15 @@ export const it = {
     resetDone: 'Ora le email partono da Cancellamy.',
     connectionDetail: (detail: string) => `Dettaglio: ${detail}`,
     ports: [465, 587, 25, 2525] as const,
+  },
+
+  gmailCallback: {
+    title: 'Collegamento a Google',
+    working: 'Stiamo completando il collegamento con il tuo Gmail...',
+    denied: 'Hai annullato il collegamento con Google. Puoi riprovare quando vuoi dalla scheda “Mittente delle email” del profilo.',
+    invalid: 'Il collegamento non è valido o è scaduto. Torna al profilo e premi di nuovo “Collega con Google”.',
+    failedTitle: 'Collegamento non riuscito',
+    toProfiles: 'Vai ai profili',
   },
 
   identity: {
@@ -1203,6 +1229,7 @@ export const it = {
   via: {
     resend: 'Inviata da Cancellamy',
     smtp: 'Dalla tua casella',
+    gmail: 'Dal tuo Gmail',
     'dry-run': 'Prova',
     inbound: 'Ricevuta',
   } satisfies Record<MessageDto['via'], string>,

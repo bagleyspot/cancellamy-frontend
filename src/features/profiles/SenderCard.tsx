@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ExternalLink, Mail, Plug, Undo2 } from 'lucide-react';
+import { ExternalLink, Mail, Plug, Undo2, Unplug } from 'lucide-react';
 import { z } from 'zod';
 import { isApiError } from '@/api/http';
-import { useSenderActions } from '@/api/mutations';
-import { useSender } from '@/api/queries';
+import { useGmailConnect, useSenderActions } from '@/api/mutations';
+import { useFeatures, useSender } from '@/api/queries';
 import type { ProfileDto, SenderDto, SmtpSettingsInput } from '@/api/types';
 import { it } from '@/i18n/it';
 import { describeError, isFeatureDisabled } from '@/lib/errors';
@@ -265,11 +265,17 @@ function SenderStatus({ sender }: { sender: SenderDto }) {
     <div className="space-y-2">
       <p className="text-sm">
         <span className="text-muted">{t.modeLabel}: </span>
-        <Badge tone={sender.mode === 'smtp' ? 'info' : 'neutral'}>{t.mode[sender.mode]}</Badge>
+        <Badge tone={sender.mode === 'cancellamy' ? 'neutral' : 'info'}>{t.mode[sender.mode]}</Badge>
       </p>
       {sender.smtp && <p className="text-sm text-muted">{t.current(sender.smtp.host, sender.smtp.port, sender.smtp.fromAddress)}</p>}
       {sender.mode === 'smtp' && (
         <p className="text-sm text-muted">{sender.verifiedAt ? t.verifiedAt(formatDateTime(sender.verifiedAt)) : t.neverVerified}</p>
+      )}
+      {sender.mode === 'gmail' && sender.gmail && (
+        <p className="text-sm text-muted">
+          {t.gmail.connected(sender.gmail.email)}
+          {sender.verifiedAt ? ` · ${t.gmail.authorizedAt(formatDateTime(sender.verifiedAt))}` : ''}
+        </p>
       )}
       {sender.lastError && (
         <Alert tone="danger" title={t.lastErrorTitle}>
@@ -282,8 +288,63 @@ function SenderStatus({ sender }: { sender: SenderDto }) {
   );
 }
 
+function GmailPanel({ profile, sender, canConnect }: { profile: ProfileDto; sender: SenderDto; canConnect: boolean }) {
+  const connect = useGmailConnect(profile.id);
+  const actions = useSenderActions(profile.id);
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const connected = sender.mode === 'gmail';
+
+  return (
+    <section className="space-y-3 rounded-xl border border-line p-4" aria-label={t.gmail.title}>
+      <h3 className="font-medium">{t.gmail.title}</h3>
+      {!connected && (
+        <>
+          <p className="text-sm text-muted">{t.gmail.body}</p>
+          <p className="text-sm text-muted">{t.gmail.addressNote}</p>
+        </>
+      )}
+      {connect.isError && <SenderError error={connect.error} />}
+      {message && <Alert tone="success">{message}</Alert>}
+      <div className="flex flex-wrap gap-2">
+        {canConnect && (
+          <Button onClick={() => connect.mutate()} loading={connect.isPending}>
+            <Mail className="h-4 w-4" aria-hidden="true" />
+            {connected ? t.gmail.reconnect : t.gmail.connect}
+          </Button>
+        )}
+        {connected && (
+          <Button variant="ghost" onClick={() => setConfirmDisconnect(true)}>
+            <Unplug className="h-4 w-4" aria-hidden="true" />
+            {t.gmail.disconnect}
+          </Button>
+        )}
+      </div>
+
+      <ConfirmDialog
+        open={confirmDisconnect}
+        title={t.gmail.disconnectTitle}
+        description={t.gmail.disconnectBody}
+        confirmLabel={t.gmail.disconnectConfirm}
+        pending={actions.reset.isPending}
+        error={actions.reset.isError ? actions.reset.error : undefined}
+        onClose={() => setConfirmDisconnect(false)}
+        onConfirm={() =>
+          actions.reset.mutate(undefined, {
+            onSuccess: () => {
+              setConfirmDisconnect(false);
+              setMessage(t.gmail.disconnectDone);
+            },
+          })
+        }
+      />
+    </section>
+  );
+}
+
 export function SenderCard({ profile }: { profile: ProfileDto }) {
   const query = useSender(profile.id);
+  const { features } = useFeatures();
   if (query.isError && isFeatureDisabled(query.error)) return null;
 
   return (
@@ -297,11 +358,21 @@ export function SenderCard({ profile }: { profile: ProfileDto }) {
         {(sender) => (
           <div className="space-y-5">
             <SenderStatus sender={sender} />
-            <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
-              <li>{t.appPasswordTip}</li>
-              <li>{t.failureNote}</li>
-            </ul>
-            <SenderForm profile={profile} sender={sender} />
+            {(features.senderGmail || sender.mode === 'gmail') && (
+              <GmailPanel profile={profile} sender={sender} canConnect={features.senderGmail} />
+            )}
+            {sender.mode === 'gmail' ? (
+              <p className="text-sm text-muted">{t.failureNote}</p>
+            ) : (
+              <>
+                {features.senderGmail && <p className="text-sm text-muted">{t.gmail.orSmtp}</p>}
+                <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
+                  <li>{t.appPasswordTip}</li>
+                  <li>{t.failureNote}</li>
+                </ul>
+                <SenderForm profile={profile} sender={sender} />
+              </>
+            )}
           </div>
         )}
       </QueryBoundary>
