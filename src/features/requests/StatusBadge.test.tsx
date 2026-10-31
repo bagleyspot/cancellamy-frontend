@@ -5,6 +5,7 @@ import { GroupBadge, StatusBadge } from './StatusBadge';
 
 describe('StatusBadge', () => {
   const labels: [RequestStatus, string][] = [
+    ['draft', 'Da inviare'],
     ['queued', 'In coda'],
     ['sent', 'Inviata'],
     ['action_required', 'Azione richiesta'],
@@ -18,6 +19,11 @@ describe('StatusBadge', () => {
   it.each(labels)('renders the Italian label for %s', (status, label) => {
     render(<StatusBadge status={status} />);
     expect(screen.getByText(label)).toBeInTheDocument();
+  });
+
+  it('renders the label of the drafts group', () => {
+    render(<GroupBadge group="to_send" />);
+    expect(screen.getByText('Da inviare')).toBeInTheDocument();
   });
 
   it('renders group labels', () => {

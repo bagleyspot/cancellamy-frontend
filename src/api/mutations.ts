@@ -88,6 +88,15 @@ export function usePauseResumeProfile(id: string) {
   });
 }
 
+/** Manual selection: queues the chosen drafts (at most 10 per call, enforced by the backend). */
+export function useSendRequests() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (requestIds: string[]) => api.requests.send({ requestIds }),
+    onSuccess: () => invalidate(queryKeys.requestsRoot, queryKeys.profiles, queryKeys.notificationsRoot),
+  });
+}
+
 export function useRequestActions(id: string) {
   const client = useQueryClient();
   const invalidate = useInvalidate();

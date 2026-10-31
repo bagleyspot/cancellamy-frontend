@@ -65,6 +65,8 @@ export function makeConfig(overrides: Partial<PublicConfigDto> = {}): PublicConf
     attachmentRetentionDays: 30,
     mailMode: 'resend',
     mailRedirect: false,
+    sendSelection: 'auto',
+    sendSelectionMax: 10,
     maxProfiles: 4,
     customRequestsPerMonth: 5,
     appVersion: '0.1.0',
@@ -131,7 +133,7 @@ export function makeProfile(overrides: Partial<ProfileDto> = {}): ProfileDto {
       textVersion: '1.0',
       revokedAt: null,
     },
-    requestCounts: { total: 10, inProgress: 6, actionRequired: 2, completed: 2, notRemovable: 0 },
+    requestCounts: { total: 10, toSend: 0, inProgress: 6, actionRequired: 2, completed: 2, notRemovable: 0 },
     createdAt: '2026-01-15T09:00:00.000Z',
     activatedAt: '2026-02-01T10:05:00.000Z',
     ...overrides,
@@ -185,7 +187,7 @@ export function makeRequestDetail(overrides: Partial<RequestDetail> = {}): Reque
 
 export function makeSummary(overrides: Partial<SummaryDto> = {}): SummaryDto {
   return {
-    counts: { total: 10, inProgress: 6, actionRequired: 2, completed: 2, notRemovable: 0 },
+    counts: { total: 10, toSend: 0, inProgress: 6, actionRequired: 2, completed: 2, notRemovable: 0 },
     coverage: { brokersTracked: 120, brokersCovered: 10, brokersNotYetCovered: 110 },
     completionRate: 0.2,
     byCategory: [{ category: 'phone_directory', total: 4, completed: 1 }],

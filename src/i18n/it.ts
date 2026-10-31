@@ -140,6 +140,7 @@ export const it = {
 
   status: {
     request: {
+      draft: 'Da inviare',
       queued: 'In coda',
       sent: 'Inviata',
       replied: 'Risposta ricevuta',
@@ -151,12 +152,14 @@ export const it = {
       cancelled: 'Annullata',
     } satisfies Record<RequestStatus, string>,
     group: {
+      to_send: 'Da inviare',
       in_progress: 'In corso',
       action_required: 'Azione richiesta',
       completed: 'Completate',
       not_removable: 'Non rimovibili',
     } satisfies Record<RequestGroup, string>,
     groupHint: {
+      to_send: 'Richieste preparate ma non ancora inviate: scegli tu quali mandare ai broker.',
       in_progress: 'Richieste inviate, in attesa di risposta dal broker.',
       action_required: 'Richieste che aspettano un tuo intervento.',
       completed: 'Il broker ha confermato la cancellazione.',
@@ -749,7 +752,27 @@ export const it = {
     nextCheck: (date: string) => `Prossimo rinnovo: ${date}`,
     completedOn: (date: string) => `Completata il ${date}`,
     open: (name: string) => `Apri la richiesta per ${name}`,
+    selection: {
+      select: (name: string) => `Seleziona la richiesta per ${name}`,
+      counter: (n: number, max: number) => `${n} selezionate (massimo ${max})`,
+      selectFirst: (max: number) => `Seleziona le prime ${max}`,
+      clear: 'Deseleziona tutto',
+      send: 'Invia selezionate',
+      sending: 'Invio in corso...',
+      hint: (max: number) => `Scegli le richieste da inviare, al massimo ${max} per volta: partono subito dalla tua casella.`,
+      maxReached: (max: number) => `Hai raggiunto il massimo di ${max} richieste per volta.`,
+      done: (n: number) => (n === 1 ? '1 richiesta messa in invio.' : `${n} richieste messe in invio.`),
+      skippedTitle: 'Alcune richieste non sono state inviate',
+      skipped: {
+        not_found: 'non è stata trovata',
+        not_draft: 'era già stata inviata o annullata',
+        profile_not_active: 'il suo profilo non è attivo',
+      } as const,
+      sendError: 'Non siamo riusciti a inviare le richieste selezionate. Riprova.',
+    },
     detail: {
+      draftTitle: 'Richiesta non ancora inviata',
+      draftBody: 'Questa richiesta è pronta ma non è stata inviata: la scegli tu dall’elenco “Da inviare”. Puoi anche annullarla.',
       back: 'Tutte le richieste',
       loadError: 'Non siamo riusciti a caricare la richiesta.',
       reference: 'Riferimento',
@@ -929,6 +952,14 @@ export const it = {
       activate: 'Attiva il profilo',
       activating: 'Attivazione in corso...',
       doneTitle: 'Profilo attivato',
+      doneDrafts: (n: number) =>
+        n === 1 ? 'È pronta 1 richiesta email: non è stata inviata.' : `Sono pronte ${n} richieste email: non ne è stata inviata nessuna.`,
+      draftsTitle: 'Scegli tu quali inviare',
+      draftsBody: (max: number) =>
+        `Nulla parte da solo. Dall’elenco “Da inviare” scegli le richieste e inviale a gruppi di al massimo ${max} per volta.`,
+      goToDrafts: 'Scegli cosa inviare',
+      manualNoteTitle: 'Scegli tu cosa inviare:',
+      manualNote: (max: number) => `attivando il profilo non parte nessuna email. Le richieste vengono preparate e poi scegli tu quali inviare, al massimo ${max} per volta.`,
       doneEmails: (n: number) => (n === 1 ? '1 richiesta è stata messa in coda per l’invio via email.' : `${n} richieste sono state messe in coda per l’invio via email.`),
       doneManual: (n: number) =>
         n === 0

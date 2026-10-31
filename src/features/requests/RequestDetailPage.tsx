@@ -50,6 +50,11 @@ function DetailContent({ detail }: { detail: RequestDetail }) {
         </p>
         {due && <p className="text-sm font-medium">{due}</p>}
         {detail.nextCheckAt && <p className="text-sm text-muted">{t.nextCheck(formatDate(detail.nextCheckAt))}</p>}
+        {detail.status === 'draft' && (
+          <Alert tone="info" title={t.detail.draftTitle}>
+            <p>{t.detail.draftBody}</p>
+          </Alert>
+        )}
         {detail.status === 'queued' && (
           <Alert tone="info" title="Richiesta in coda di invio">
             <p>

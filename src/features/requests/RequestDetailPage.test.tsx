@@ -20,6 +20,16 @@ const MANUAL = {
 };
 
 describe('request detail: contextual actions', () => {
+  it('says a draft has not been sent yet, offers no reminder or escalation and still allows cancelling', async () => {
+    showRequest(makeRequestDetail({ status: 'draft', group: 'to_send', sentAt: null, dueAt: null, canRemind: false, canEscalate: false }));
+
+    expect(await screen.findByText('Richiesta non ancora inviata')).toBeInTheDocument();
+    expect(screen.getByText(/la scegli tu dall’elenco “Da inviare”/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /sollecit/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Garante/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Annulla la richiesta' })).toBeInTheDocument();
+  });
+
   it('shows broker info, timeline and no action buttons for a plain sent request', async () => {
     showRequest(makeRequestDetail({ status: 'sent' }));
 

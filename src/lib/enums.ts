@@ -23,7 +23,7 @@ export function parseVerification(value: string | null): VerificationStatus | un
 }
 
 export function parseGroup(value: string | null, fallback: RequestGroup): RequestGroup {
-  const groups: RequestGroup[] = ['in_progress', 'action_required', 'completed', 'not_removable'];
+  const groups: RequestGroup[] = ['to_send', 'in_progress', 'action_required', 'completed', 'not_removable'];
   return groups.find((option) => option === value) ?? fallback;
 }
 
