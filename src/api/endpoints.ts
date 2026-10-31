@@ -49,6 +49,9 @@ import type {
   ResetPasswordRequest,
   SendCodeRequest,
   SenderDto,
+  GmailStartResponse,
+  CompleteGmailRequest,
+  CompleteGmailResponse,
   SetSenderRequest,
   SignAuthorizationRequest,
   SimulateReplyRequest,
@@ -99,6 +102,11 @@ export interface LeaderboardQuery {
 export const api = {
   config: () => request<PublicConfigDto>('GET', '/config'),
 
+  /** Not scoped to a profile: the profile travels inside the OAuth `state`. */
+  senderGmail: {
+    complete: (body: CompleteGmailRequest) => request<CompleteGmailResponse>('POST', '/sender/gmail/complete', { body }),
+  },
+
   auth: {
     register: (body: RegisterRequest) => request<AuthResponse>('POST', '/auth/register', { body }),
     login: (body: LoginRequest) => request<AuthResponse>('POST', '/auth/login', { body }),
@@ -138,6 +146,7 @@ export const api = {
       test: (id: string, body?: SmtpSettingsInput) =>
         request<{ ok: true }>('POST', `/profiles/${id}/sender/test`, body ? { body } : {}),
       reset: (id: string) => request<SenderDto>('DELETE', `/profiles/${id}/sender`),
+      gmailStart: (id: string) => request<GmailStartResponse>('POST', `/profiles/${id}/sender/gmail/start`),
     },
     identity: {
       get: (id: string) => request<IdentityDto>('GET', `/profiles/${id}/identity`),

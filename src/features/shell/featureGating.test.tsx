@@ -8,6 +8,7 @@ import { server } from '@/test/server';
 
 const ALL_OFF = makeFeatures({
   senderSmtp: false,
+  senderGmail: false,
   dossier: false,
   dossierTimestamp: false,
   accessRequests: false,

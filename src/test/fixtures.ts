@@ -45,6 +45,7 @@ export function makeUser(overrides: Partial<UserDto> = {}): UserDto {
 export function makeFeatures(overrides: Partial<FeatureFlags> = {}): FeatureFlags {
   return {
     senderSmtp: true,
+    senderGmail: false,
     dossier: true,
     dossierTimestamp: true,
     accessRequests: true,
@@ -233,7 +234,7 @@ export function makeMessage(overrides: Partial<MessageDto> = {}): MessageDto {
 }
 
 export function makeSender(overrides: Partial<SenderDto> = {}): SenderDto {
-  return { mode: 'cancellamy', smtp: null, verifiedAt: null, lastError: null, replyAddress: 'r-abc123@reply.cancellamy.example', ...overrides };
+  return { mode: 'cancellamy', smtp: null, gmail: null, verifiedAt: null, lastError: null, replyAddress: 'r-abc123@reply.cancellamy.example', ...overrides };
 }
 
 export function makeIdentity(overrides: Partial<IdentityDto> = {}): IdentityDto {

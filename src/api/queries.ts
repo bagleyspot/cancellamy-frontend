@@ -41,6 +41,7 @@ export const useConfig = () =>
 /** All features off until the config is loaded (and when it cannot be loaded): optional UI stays hidden. */
 export const NO_FEATURES: FeatureFlags = {
   senderSmtp: false,
+  senderGmail: false,
   dossier: false,
   dossierTimestamp: false,
   accessRequests: false,
