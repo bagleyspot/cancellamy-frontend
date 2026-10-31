@@ -7,6 +7,10 @@ import { makeProfile, makeSender } from '@/test/fixtures';
 import { apiError, apiUrl, signedInHandlers } from '@/test/handlers';
 import { renderApp } from '@/test/render';
 import { server } from '@/test/server';
+import { SENDER_PRESETS } from './senderPresets';
+
+// A made-up value: it only has to travel from the field to the request body.
+const TEST_APP_PASSWORD = 'not-a-real-password';
 
 const profile = makeProfile({ emails: ['mario@example.it', 'mario.rossi@example.org'] });
 
@@ -140,7 +144,7 @@ describe('profile: sender card', () => {
       }),
     );
     await user.selectOptions(await screen.findByLabelText('Provider di posta'), 'gmail');
-    await user.type(screen.getByLabelText('Password per le app'), 'abcd efgh ijkl mnop');
+    await user.type(screen.getByLabelText('Password per le app'), TEST_APP_PASSWORD);
 
     await user.click(screen.getByRole('button', { name: 'Salva' }));
 
@@ -148,7 +152,7 @@ describe('profile: sender card', () => {
     expect(bodies).toEqual([
       {
         mode: 'smtp',
-        smtp: { host: 'smtp.gmail.com', port: 587, secure: false, username: 'mario@example.it', fromAddress: 'mario@example.it', password: 'abcd efgh ijkl mnop' },
+        smtp: { host: SENDER_PRESETS.gmail.host, port: 587, secure: false, username: 'mario@example.it', fromAddress: 'mario@example.it', password: TEST_APP_PASSWORD },
       },
     ]);
   });
