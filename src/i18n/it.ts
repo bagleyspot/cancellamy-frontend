@@ -237,6 +237,8 @@ export const it = {
       VALIDATION_ERROR: 'Alcuni dati non sono validi. Controlla i campi e riprova.',
       SMTP_CONNECTION_FAILED: 'Non riusciamo a collegarci al tuo server di posta. Controlla server, porta, nome utente e password per le app.',
       SMTP_HOST_NOT_ALLOWED: 'Questo server non è ammesso: usa un server SMTP pubblico sulle porte 25, 465, 587 o 2525.',
+      GMAIL_AUTH_FAILED: 'Non siamo riusciti a completare il collegamento con Google. Riprova dall’inizio e consenti l’invio di email.',
+      GMAIL_ADDRESS_NOT_IN_PROFILE: 'L’account Google scelto non corrisponde a nessun indirizzo email di questo profilo. Aggiungi l’indirizzo al profilo oppure scegli l’account giusto.',
       IDENTITY_REQUIRED: 'Prima devi verificare l’identità del profilo.',
       VERIFICATION_CODE_INVALID: 'Il codice non è corretto o è scaduto. Controlla le 6 cifre oppure richiedine uno nuovo.',
       VERIFICATION_RATE_LIMITED: 'Hai richiesto troppi codici ravvicinati. Attendi qualche minuto e riprova.',
@@ -967,7 +969,7 @@ export const it = {
     title: 'Mittente delle email',
     intro: 'Di norma le richieste partono da Cancellamy. Se preferisci, possono partire dalla tua casella di posta: i broker vedranno il tuo indirizzo come mittente.',
     loadError: 'Non siamo riusciti a caricare le impostazioni del mittente.',
-    mode: { cancellamy: 'Da Cancellamy', smtp: 'Dalla tua casella' } satisfies Record<SenderMode, string>,
+    mode: { cancellamy: 'Da Cancellamy', smtp: 'Dalla tua casella', gmail: 'Dal tuo Gmail' } satisfies Record<SenderMode, string>,
     modeLabel: 'Modalità attuale',
     replyNote: (address: string) =>
       `Quando scrivi dalla tua casella, le email partono dal tuo indirizzo ma le risposte dei broker arrivano comunque a Cancellamy, all’indirizzo ${address}: così possiamo seguirle per te.`,
@@ -979,6 +981,74 @@ export const it = {
     lastErrorTitle: 'L’ultimo invio non è riuscito',
     lastErrorBody: 'Controlla le impostazioni e salvale di nuovo: le richieste in attesa ripartiranno.',
     current: (host: string, port: number, from: string) => `Server ${host}:${port}, mittente ${from}`,
+    preset: 'Provider di posta',
+    presetHint: 'Scegli il tuo provider per compilare in automatico server, porta e cifratura.',
+    presets: {
+      gmail: 'Gmail',
+      icloud: 'iCloud Mail',
+      yahoo: 'Yahoo Mail',
+      libero: 'Libero Mail',
+      aruba: 'Aruba (casella su dominio)',
+      other: 'Altro server SMTP',
+    } satisfies Record<'gmail' | 'icloud' | 'yahoo' | 'libero' | 'aruba' | 'other', string>,
+    guides: {
+      gmail: {
+        title: 'Come collegare Gmail',
+        steps: [
+          'Attiva la verifica in due passaggi sul tuo account Google (se non l’hai già fatto).',
+          'Crea una password per le app: sono 16 caratteri, diversa dalla password di Google.',
+          'Incollala qui sotto nel campo “Password per le app”, poi premi “Prova la connessione”.',
+        ],
+        link: 'Crea una password per le app Google',
+      },
+      icloud: {
+        title: 'Come collegare iCloud Mail',
+        steps: [
+          'Il tuo Apple Account deve avere l’autenticazione a due fattori attiva.',
+          'Su account.apple.com, in “Accesso e sicurezza”, crea una password specifica per l’app.',
+          'Incollala qui sotto nel campo “Password per le app”: il nome utente è il tuo indirizzo iCloud completo.',
+        ],
+        link: 'Apri il tuo Apple Account',
+      },
+      yahoo: {
+        title: 'Come collegare Yahoo Mail',
+        steps: [
+          'Nelle impostazioni di sicurezza dell’account Yahoo genera una password per le app.',
+          'Incollala qui sotto nel campo “Password per le app”: il nome utente è il tuo indirizzo Yahoo completo.',
+        ],
+        link: 'Apri la sicurezza dell’account Yahoo',
+      },
+      libero: {
+        title: 'Come collegare Libero Mail',
+        steps: [
+          'Il nome utente è il tuo indirizzo Libero completo.',
+          'Se con la password normale la connessione viene rifiutata, crea una password per le app dall’area account della webmail Libero e usa quella.',
+        ],
+      },
+      aruba: {
+        title: 'Come collegare una casella Aruba',
+        steps: [
+          'Il nome utente è il tuo indirizzo email completo e la password è quella della casella.',
+          'Questi valori valgono per le caselle su dominio gestite da Aruba. Per le caselle @aruba.it il server è smtp.aruba.it: puoi correggerlo nel campo qui sotto.',
+        ],
+      },
+    } satisfies Record<'gmail' | 'icloud' | 'yahoo' | 'libero' | 'aruba', { title: string; steps: readonly string[]; link?: string }>,
+    gmail: {
+      title: 'Collega con Google',
+      body: 'Le richieste partono dal tuo Gmail, senza password da incollare. Chiediamo solo il permesso di inviare email: non leggiamo la tua casella e trovi i messaggi nella cartella “Posta inviata”.',
+      addressNote: 'Uno degli indirizzi del profilo deve essere l’account Google che scegli.',
+      connect: 'Collega con Google',
+      reconnect: 'Ricollega',
+      connected: (email: string) => `Collegato a ${email}`,
+      authorizedAt: (date: string) => `Autorizzato il ${date}`,
+      disconnect: 'Scollega',
+      disconnectTitle: 'Scollegare Gmail?',
+      disconnectBody: 'Le prossime email partiranno da Cancellamy e revocheremo l’accesso anche presso Google.',
+      disconnectConfirm: 'Sì, scollega',
+      disconnectDone: 'Gmail scollegato: ora le email partono da Cancellamy.',
+      orSmtp: 'Oppure usa un altro provider con una password per le app:',
+    },
+    fromNote: 'Usa come mittente l’indirizzo della casella che stai collegando: molti provider rifiutano o sostituiscono qualsiasi altro indirizzo.',
     host: 'Server SMTP',
     hostHint: 'Ad esempio smtp.gmail.com. Sono accettati solo server pubblici.',
     port: 'Porta',
@@ -1001,6 +1071,15 @@ export const it = {
     resetDone: 'Ora le email partono da Cancellamy.',
     connectionDetail: (detail: string) => `Dettaglio: ${detail}`,
     ports: [465, 587, 25, 2525] as const,
+  },
+
+  gmailCallback: {
+    title: 'Collegamento a Google',
+    working: 'Stiamo completando il collegamento con il tuo Gmail...',
+    denied: 'Hai annullato il collegamento con Google. Puoi riprovare quando vuoi dalla scheda “Mittente delle email” del profilo.',
+    invalid: 'Il collegamento non è valido o è scaduto. Torna al profilo e premi di nuovo “Collega con Google”.',
+    failedTitle: 'Collegamento non riuscito',
+    toProfiles: 'Vai ai profili',
   },
 
   identity: {
@@ -1150,6 +1229,7 @@ export const it = {
   via: {
     resend: 'Inviata da Cancellamy',
     smtp: 'Dalla tua casella',
+    gmail: 'Dal tuo Gmail',
     'dry-run': 'Prova',
     inbound: 'Ricevuta',
   } satisfies Record<MessageDto['via'], string>,

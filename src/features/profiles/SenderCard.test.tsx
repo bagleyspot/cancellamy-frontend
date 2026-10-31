@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import type { SetSenderRequest, SmtpSettingsInput } from '@/api/types';
@@ -7,6 +7,10 @@ import { makeProfile, makeSender } from '@/test/fixtures';
 import { apiError, apiUrl, signedInHandlers } from '@/test/handlers';
 import { renderApp } from '@/test/render';
 import { server } from '@/test/server';
+import { SENDER_PRESETS } from './senderPresets';
+
+// A made-up value: it only has to travel from the field to the request body.
+const TEST_APP_PASSWORD = 'not-a-real-password';
 
 const profile = makeProfile({ emails: ['mario@example.it', 'mario.rossi@example.org'] });
 
@@ -69,6 +73,88 @@ describe('profile: sender card', () => {
     await user.click(screen.getByRole('button', { name: 'Prova la connessione' }));
 
     expect(await screen.findByText('Campo obbligatorio')).toBeInTheDocument();
+  });
+
+  it('fills server, port and user name when Gmail is chosen and keeps the user name in sync with the sender address', async () => {
+    const user = userEvent.setup();
+    openProfile();
+    await user.selectOptions(await screen.findByLabelText('Provider di posta'), 'gmail');
+
+    expect(screen.getByLabelText('Server SMTP')).toHaveValue('smtp.gmail.com');
+    expect(screen.getByLabelText('Porta')).toHaveValue('587');
+    expect(screen.getByLabelText(/Connessione cifrata fin dall’inizio/)).not.toBeChecked();
+    expect(screen.getByLabelText('Nome utente')).toHaveValue('mario@example.it');
+    const link = screen.getByRole('link', { name: /Crea una password per le app Google/ });
+    expect(link).toHaveAttribute('href', 'https://myaccount.google.com/apppasswords');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+
+    await user.selectOptions(screen.getByLabelText('Indirizzo mittente'), 'mario.rossi@example.org');
+    expect(screen.getByLabelText('Nome utente')).toHaveValue('mario.rossi@example.org');
+  });
+
+  it.each([
+    ['icloud', 'Come collegare iCloud Mail', 'smtp.mail.me.com', '587', false, 'https://account.apple.com/account/manage'],
+    ['yahoo', 'Come collegare Yahoo Mail', 'smtp.mail.yahoo.com', '465', true, 'https://login.yahoo.com/account/security'],
+    ['libero', 'Come collegare Libero Mail', 'smtp.libero.it', '465', true, null],
+    ['aruba', 'Come collegare una casella Aruba', 'smtps.aruba.it', '465', true, null],
+  ])('fills the %s preset and shows its guide', async (provider, guideTitle, host, port, secure, linkHref) => {
+    const user = userEvent.setup();
+    openProfile();
+    await user.selectOptions(await screen.findByLabelText('Provider di posta'), provider);
+
+    expect(screen.getByLabelText('Server SMTP')).toHaveValue(host);
+    expect(screen.getByLabelText('Porta')).toHaveValue(port);
+    const tls = screen.getByLabelText(/Connessione cifrata fin dall’inizio/);
+    if (secure) expect(tls).toBeChecked();
+    else expect(tls).not.toBeChecked();
+    expect(screen.getByLabelText('Nome utente')).toHaveValue('mario@example.it');
+    const guide = screen.getByText(guideTitle).closest('[role="status"]') as HTMLElement;
+    const links = within(guide).queryAllByRole('link');
+    if (linkHref) expect(links.map((link) => link.getAttribute('href'))).toContain(linkHref);
+    else expect(links).toHaveLength(0);
+  });
+
+  it('shows the Gmail guide when Gmail is already configured, and hides it after switching to another server', async () => {
+    const user = userEvent.setup();
+    openProfile(
+      makeSender({
+        mode: 'smtp',
+        smtp: { host: 'smtp.gmail.com', port: 587, secure: false, username: 'mario@example.it', fromAddress: 'mario@example.it' },
+      }),
+    );
+
+    expect(await screen.findByLabelText('Provider di posta')).toHaveValue('gmail');
+    expect(screen.getByText('Come collegare Gmail')).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText('Server SMTP'));
+    await user.type(screen.getByLabelText('Server SMTP'), 'smtp.example.org');
+
+    expect(screen.getByLabelText('Provider di posta')).toHaveValue('other');
+    expect(screen.queryByText('Come collegare Gmail')).not.toBeInTheDocument();
+  });
+
+  it('sends the Gmail preset values when saving', async () => {
+    const user = userEvent.setup();
+    const bodies: SetSenderRequest[] = [];
+    openProfile();
+    server.use(
+      http.put(apiUrl('/profiles/profile-1/sender'), async ({ request }) => {
+        bodies.push((await request.json()) as SetSenderRequest);
+        return HttpResponse.json(makeSender());
+      }),
+    );
+    await user.selectOptions(await screen.findByLabelText('Provider di posta'), 'gmail');
+    await user.type(screen.getByLabelText('Password per le app'), TEST_APP_PASSWORD);
+
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+
+    await screen.findByText(/Impostazioni salvate/);
+    expect(bodies).toEqual([
+      {
+        mode: 'smtp',
+        smtp: { host: SENDER_PRESETS.gmail.host, port: 587, secure: false, username: 'mario@example.it', fromAddress: 'mario@example.it', password: TEST_APP_PASSWORD },
+      },
+    ]);
   });
 
   it('tests the connection with the form values and shows a friendly error when it fails', async () => {

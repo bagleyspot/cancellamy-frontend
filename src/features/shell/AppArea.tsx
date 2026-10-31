@@ -10,6 +10,7 @@ import { DelistingPage } from '@/features/delisting/DelistingPage';
 import { NotificationsPage } from '@/features/notifications/NotificationsPage';
 import { NuisancePage } from '@/features/nuisance/NuisancePage';
 import { CreateProfilePage } from '@/features/profiles/CreateProfilePage';
+import { GmailCallbackPage } from '@/features/profiles/GmailCallbackPage';
 import { ProfilePage } from '@/features/profiles/ProfilePage';
 import { ProfilesPage } from '@/features/profiles/ProfilesPage';
 import { NotFoundPage } from '@/features/public/NotFoundPage';
@@ -58,6 +59,7 @@ export default function AppArea() {
         <Route path="profili" element={<ProfilesPage />} />
         <Route path="profili/nuovo" element={<CreateProfilePage />} />
         <Route path="profili/:id" element={<ProfilePage />} />
+        <Route path="collega-google" element={<GmailCallbackPage />} />
         <Route path="report" element={<ReportsPage />} />
         <Route path="notifiche" element={<NotificationsPage />} />
         <Route path="impostazioni" element={<SettingsPage />} />

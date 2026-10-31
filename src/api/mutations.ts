@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from './endpoints';
+import { redirectTo } from '@/lib/navigation';
 import { queryKeys } from './queries';
 import type {
   AccessFindingsInput,
@@ -16,6 +17,7 @@ import type {
   ProfileInput,
   SendCodeRequest,
   SenderDto,
+  CompleteGmailRequest,
   SetSenderRequest,
   SignAuthorizationRequest,
   SimulateReplyRequest,
@@ -145,6 +147,27 @@ export function useSenderActions(profileId: string) {
     test: (smtp: SmtpSettingsInput) => api.profiles.sender.test(profileId, smtp),
     reset: useMutation({ mutationFn: () => api.profiles.sender.reset(profileId), onSuccess: store }),
   };
+}
+
+/** "Collega con Google": asks the backend for the consent URL and sends the browser there. */
+export function useGmailConnect(profileId: string) {
+  return useMutation({
+    mutationFn: () => api.profiles.sender.gmailStart(profileId),
+    onSuccess: ({ url }) => redirectTo(url),
+  });
+}
+
+/** Called by the /app/collega-google route with the `code` and `state` Google put in the redirect. */
+export function useGmailComplete() {
+  const client = useQueryClient();
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (body: CompleteGmailRequest) => api.senderGmail.complete(body),
+    onSuccess: async ({ profileId, sender }) => {
+      client.setQueryData(queryKeys.sender(profileId), sender);
+      await invalidate(queryKeys.profiles);
+    },
+  });
 }
 
 export function useCheckBreaches(profileId: string) {

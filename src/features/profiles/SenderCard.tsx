@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail, Plug, Undo2 } from 'lucide-react';
+import { ExternalLink, Mail, Plug, Undo2, Unplug } from 'lucide-react';
 import { z } from 'zod';
 import { isApiError } from '@/api/http';
-import { useSenderActions } from '@/api/mutations';
-import { useSender } from '@/api/queries';
+import { useGmailConnect, useSenderActions } from '@/api/mutations';
+import { useFeatures, useSender } from '@/api/queries';
 import type { ProfileDto, SenderDto, SmtpSettingsInput } from '@/api/types';
 import { it } from '@/i18n/it';
 import { describeError, isFeatureDisabled } from '@/lib/errors';
@@ -18,6 +18,8 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CheckboxField, SelectField, TextField } from '@/components/ui/Field';
 import { QueryBoundary } from '@/components/ui/QueryBoundary';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { detectPreset, SENDER_PRESETS, SENDER_PROVIDER_IDS } from './senderPresets';
+import type { SenderPresetId } from './senderPresets';
 
 const t = it.sender;
 const v = it.validation;
@@ -55,9 +57,12 @@ function SenderForm({ profile, sender }: { profile: ProfileDto; sender: SenderDt
   const [confirmReset, setConfirmReset] = useState(false);
 
   const smtp = sender.smtp;
+  const [presetId, setPresetId] = useState<SenderPresetId>(detectPreset(smtp?.host));
   const {
     register,
     handleSubmit,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -69,6 +74,20 @@ function SenderForm({ profile, sender }: { profile: ProfileDto; sender: SenderDt
       fromAddress: smtp?.fromAddress ?? profile.emails[0] ?? '',
     },
   });
+
+  const guide: { title: string; steps: readonly string[]; link?: string } | null = presetId === 'other' ? null : t.guides[presetId];
+  const hostField = register('host');
+  const fromField = register('fromAddress');
+
+  const choosePreset = (id: SenderPresetId) => {
+    setPresetId(id);
+    if (id === 'other') return;
+    const preset = SENDER_PRESETS[id];
+    setValue('host', preset.host);
+    setValue('port', String(preset.port));
+    setValue('secure', preset.secure);
+    setValue('username', getValues('fromAddress')); // every preset uses the full mailbox address as user name
+  };
 
   const run = (kind: 'test' | 'save') =>
     handleSubmit(async (values) => {
@@ -116,9 +135,50 @@ function SenderForm({ profile, sender }: { profile: ProfileDto; sender: SenderDt
         className="space-y-4"
         aria-label={t.title}
       >
+        <SelectField label={t.preset} hint={t.presetHint} value={presetId} onChange={(event) => choosePreset(event.target.value as SenderPresetId)}>
+          {SENDER_PROVIDER_IDS.map((id) => (
+            <option key={id} value={id}>
+              {t.presets[id]}
+            </option>
+          ))}
+          <option value="other">{t.presets.other}</option>
+        </SelectField>
+        {guide && presetId !== 'other' && (
+          <Alert tone="info" title={guide.title}>
+            <ol className="list-decimal space-y-1 pl-5">
+              {guide.steps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+            {guide.link && SENDER_PRESETS[presetId].appPasswordUrl && (
+              <p className="mt-2">
+                <a
+                  href={SENDER_PRESETS[presetId].appPasswordUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-medium text-primary underline"
+                >
+                  {guide.link}
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                </a>
+              </p>
+            )}
+            <p className="mt-2">{t.fromNote}</p>
+          </Alert>
+        )}
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="sm:col-span-2">
-            <TextField label={t.host} hint={t.hostHint} autoComplete="off" error={errors.host?.message} {...register('host')} />
+            <TextField
+              label={t.host}
+              hint={t.hostHint}
+              autoComplete="off"
+              error={errors.host?.message}
+              {...hostField}
+              onChange={(event) => {
+                void hostField.onChange(event);
+                if (presetId !== 'other' && event.target.value.trim().toLowerCase() !== SENDER_PRESETS[presetId].host) setPresetId('other');
+              }}
+            />
           </div>
           <SelectField label={t.port} error={errors.port?.message} {...register('port')}>
             {PORTS.map((port) => (
@@ -141,7 +201,16 @@ function SenderForm({ profile, sender }: { profile: ProfileDto; sender: SenderDt
             onChange={() => setPasswordError(undefined)}
           />
         </div>
-        <SelectField label={t.fromAddress} hint={t.fromAddressHint} error={errors.fromAddress?.message} {...register('fromAddress')}>
+        <SelectField
+          label={t.fromAddress}
+          hint={t.fromAddressHint}
+          error={errors.fromAddress?.message}
+          {...fromField}
+          onChange={(event) => {
+            void fromField.onChange(event);
+            if (presetId !== 'other') setValue('username', event.target.value);
+          }}
+        >
           {profile.emails.map((email) => (
             <option key={email} value={email}>
               {email}
@@ -196,11 +265,17 @@ function SenderStatus({ sender }: { sender: SenderDto }) {
     <div className="space-y-2">
       <p className="text-sm">
         <span className="text-muted">{t.modeLabel}: </span>
-        <Badge tone={sender.mode === 'smtp' ? 'info' : 'neutral'}>{t.mode[sender.mode]}</Badge>
+        <Badge tone={sender.mode === 'cancellamy' ? 'neutral' : 'info'}>{t.mode[sender.mode]}</Badge>
       </p>
       {sender.smtp && <p className="text-sm text-muted">{t.current(sender.smtp.host, sender.smtp.port, sender.smtp.fromAddress)}</p>}
       {sender.mode === 'smtp' && (
         <p className="text-sm text-muted">{sender.verifiedAt ? t.verifiedAt(formatDateTime(sender.verifiedAt)) : t.neverVerified}</p>
+      )}
+      {sender.mode === 'gmail' && sender.gmail && (
+        <p className="text-sm text-muted">
+          {t.gmail.connected(sender.gmail.email)}
+          {sender.verifiedAt ? ` · ${t.gmail.authorizedAt(formatDateTime(sender.verifiedAt))}` : ''}
+        </p>
       )}
       {sender.lastError && (
         <Alert tone="danger" title={t.lastErrorTitle}>
@@ -213,8 +288,63 @@ function SenderStatus({ sender }: { sender: SenderDto }) {
   );
 }
 
+function GmailPanel({ profile, sender, canConnect }: { profile: ProfileDto; sender: SenderDto; canConnect: boolean }) {
+  const connect = useGmailConnect(profile.id);
+  const actions = useSenderActions(profile.id);
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const connected = sender.mode === 'gmail';
+
+  return (
+    <section className="space-y-3 rounded-xl border border-line p-4" aria-label={t.gmail.title}>
+      <h3 className="font-medium">{t.gmail.title}</h3>
+      {!connected && (
+        <>
+          <p className="text-sm text-muted">{t.gmail.body}</p>
+          <p className="text-sm text-muted">{t.gmail.addressNote}</p>
+        </>
+      )}
+      {connect.isError && <SenderError error={connect.error} />}
+      {message && <Alert tone="success">{message}</Alert>}
+      <div className="flex flex-wrap gap-2">
+        {canConnect && (
+          <Button onClick={() => connect.mutate()} loading={connect.isPending}>
+            <Mail className="h-4 w-4" aria-hidden="true" />
+            {connected ? t.gmail.reconnect : t.gmail.connect}
+          </Button>
+        )}
+        {connected && (
+          <Button variant="ghost" onClick={() => setConfirmDisconnect(true)}>
+            <Unplug className="h-4 w-4" aria-hidden="true" />
+            {t.gmail.disconnect}
+          </Button>
+        )}
+      </div>
+
+      <ConfirmDialog
+        open={confirmDisconnect}
+        title={t.gmail.disconnectTitle}
+        description={t.gmail.disconnectBody}
+        confirmLabel={t.gmail.disconnectConfirm}
+        pending={actions.reset.isPending}
+        error={actions.reset.isError ? actions.reset.error : undefined}
+        onClose={() => setConfirmDisconnect(false)}
+        onConfirm={() =>
+          actions.reset.mutate(undefined, {
+            onSuccess: () => {
+              setConfirmDisconnect(false);
+              setMessage(t.gmail.disconnectDone);
+            },
+          })
+        }
+      />
+    </section>
+  );
+}
+
 export function SenderCard({ profile }: { profile: ProfileDto }) {
   const query = useSender(profile.id);
+  const { features } = useFeatures();
   if (query.isError && isFeatureDisabled(query.error)) return null;
 
   return (
@@ -228,11 +358,21 @@ export function SenderCard({ profile }: { profile: ProfileDto }) {
         {(sender) => (
           <div className="space-y-5">
             <SenderStatus sender={sender} />
-            <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
-              <li>{t.appPasswordTip}</li>
-              <li>{t.failureNote}</li>
-            </ul>
-            <SenderForm profile={profile} sender={sender} />
+            {(features.senderGmail || sender.mode === 'gmail') && (
+              <GmailPanel profile={profile} sender={sender} canConnect={features.senderGmail} />
+            )}
+            {sender.mode === 'gmail' ? (
+              <p className="text-sm text-muted">{t.failureNote}</p>
+            ) : (
+              <>
+                {features.senderGmail && <p className="text-sm text-muted">{t.gmail.orSmtp}</p>}
+                <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
+                  <li>{t.appPasswordTip}</li>
+                  <li>{t.failureNote}</li>
+                </ul>
+                <SenderForm profile={profile} sender={sender} />
+              </>
+            )}
           </div>
         )}
       </QueryBoundary>
