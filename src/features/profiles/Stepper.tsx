@@ -2,12 +2,16 @@ import { Check } from 'lucide-react';
 import { it } from '@/i18n/it';
 import { cn } from '@/lib/cn';
 
-/** Horizontal progress indicator; `current` is 1-based. */
-export function Stepper({ current }: { current: number }) {
-  const steps = it.profiles.steps;
+/**
+ * Horizontal progress indicator; `current` is 1-based on the full four-step flow. Without a delega to sign
+ * (`withAuthorization` false) the authorization step is dropped and the later steps shift up.
+ */
+export function Stepper({ current: fullCurrent, withAuthorization = true }: { current: number; withAuthorization?: boolean }) {
+  const steps = withAuthorization ? it.profiles.steps : it.profiles.stepsOwnMailbox;
+  const current = !withAuthorization && fullCurrent > 3 ? fullCurrent - 1 : fullCurrent;
   return (
     <nav aria-label={it.profiles.stepper}>
-      <ol className="grid grid-cols-4 gap-2">
+      <ol className="grid gap-2" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}>
         {steps.map((label, index) => {
           const number = index + 1;
           const done = number < current;

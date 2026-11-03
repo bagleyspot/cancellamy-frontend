@@ -126,6 +126,7 @@ export function makeProfile(overrides: Partial<ProfileDto> = {}): ProfileDto {
     addresses: [],
     aliases: [],
     status: 'active',
+    authorizationRequired: true,
     authorization: {
       id: 'auth-1',
       signedAt: '2026-02-01T10:00:00.000Z',
