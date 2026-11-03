@@ -35,9 +35,11 @@ function SetupFlow({ profile, activation, onActivated }: SetupFlowProps) {
   const t = it.profiles.page;
   // draft = no valid authorization yet (step 3); ready = signed, waiting for activation (step 4).
   const step = profile.status === 'draft' ? 3 : 4;
+  // Profiles that send from their own mailbox have no delega to sign (a leftover draft one can still sign).
+  const withAuthorization = profile.authorizationRequired || profile.status === 'draft';
   return (
     <section aria-label={t.setupTitle} className="space-y-4">
-      <Stepper current={step} />
+      <Stepper current={step} withAuthorization={withAuthorization} />
       <Card>
         {step === 3 ? (
           <AuthorizationStep profile={profile} onSigned={() => undefined} />
@@ -106,7 +108,7 @@ function ProfileDetail({ profile }: { profile: ProfileDto }) {
         </div>
 
         <div className="space-y-6">
-          <AuthorizationCard profile={profile} />
+          {(profile.authorizationRequired || profile.authorization !== null) && <AuthorizationCard profile={profile} />}
           {!setupPending && (
             <Card className="space-y-3">
               <CardTitle>{t.requestsTitle}</CardTitle>
