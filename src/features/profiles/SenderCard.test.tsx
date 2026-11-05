@@ -159,11 +159,11 @@ describe('profile: sender card', () => {
 
   it('tests the connection with the form values and shows a friendly error when it fails', async () => {
     const user = userEvent.setup();
-    const bodies: SmtpSettingsInput[] = [];
+    const bodies: { smtp: SmtpSettingsInput }[] = [];
     openProfile();
     server.use(
       http.post(apiUrl('/profiles/profile-1/sender/test'), async ({ request }) => {
-        bodies.push((await request.json()) as SmtpSettingsInput);
+        bodies.push((await request.json()) as { smtp: SmtpSettingsInput });
         return apiError(400, 'SMTP_CONNECTION_FAILED', 'Autenticazione rifiutata dal server (535)');
       }),
     );
@@ -174,7 +174,7 @@ describe('profile: sender card', () => {
     expect(await screen.findByText(/Non riusciamo a collegarci al tuo server di posta/)).toBeInTheDocument();
     expect(screen.getByText(/Autenticazione rifiutata dal server \(535\)/)).toBeInTheDocument();
     expect(bodies).toEqual([
-      { host: 'smtp.example.org', port: 465, secure: true, username: 'mario', password: 'app-password-123', fromAddress: 'mario.rossi@example.org' },
+      { smtp: { host: 'smtp.example.org', port: 465, secure: true, username: 'mario', password: 'app-password-123', fromAddress: 'mario.rossi@example.org' } },
     ]);
     // a failed test keeps what the user typed so it can be fixed
     expect(screen.getByLabelText('Password per le app')).toHaveValue('app-password-123');
