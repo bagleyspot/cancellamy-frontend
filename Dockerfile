@@ -10,7 +10,7 @@ ARG VITE_SOURCE_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL VITE_SOURCE_URL=$VITE_SOURCE_URL
 RUN npm run build
 
-FROM nginxinc/nginx-unprivileged:1.30-alpine@sha256:f5116ed4606f3eb015dd4a8e28cb9b351476dc0ad4bc6e9f93b19cec130cdf03
+FROM nginxinc/nginx-unprivileged:1.31-alpine@sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e
 # The base image lags behind Alpine security fixes (brotli-libs, curl): upgrade OS packages, then drop root again.
 # Remove this once a newer base image already ships the fixed packages.
 USER root
