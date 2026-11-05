@@ -144,7 +144,7 @@ export const api = {
       get: (id: string) => request<SenderDto>('GET', `/profiles/${id}/sender`),
       set: (id: string, body: SetSenderRequest) => request<SenderDto>('PUT', `/profiles/${id}/sender`, { body }),
       test: (id: string, body?: SmtpSettingsInput) =>
-        request<{ ok: true }>('POST', `/profiles/${id}/sender/test`, body ? { body } : {}),
+        request<{ ok: true }>('POST', `/profiles/${id}/sender/test`, body ? { body: { smtp: body } } : {}),
       reset: (id: string) => request<SenderDto>('DELETE', `/profiles/${id}/sender`),
       gmailStart: (id: string) => request<GmailStartResponse>('POST', `/profiles/${id}/sender/gmail/start`),
     },
