@@ -734,6 +734,13 @@ export const it = {
     searchLabel: 'Cerca per nome del broker',
     categoryLabel: 'Categoria',
     allCategories: 'Tutte le categorie',
+    areaLabel: 'Area geografica',
+    allAreas: 'Tutte le aree',
+    areas: {
+      italy: 'Copre l’Italia',
+      other: 'Solo altri mercati',
+      unknown: 'Non classificati',
+    },
     tabsLabel: 'Gruppi di richieste',
     emptyTitle: 'Nessuna richiesta in questo gruppo',
     emptyBody: 'Quando ci saranno richieste in questo stato le vedrai qui.',

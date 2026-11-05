@@ -5,7 +5,7 @@ import { useSendRequests } from '@/api/mutations';
 import { useConfig, useRequests, useSummary } from '@/api/queries';
 import type { RequestGroup, RequestListItem, SendRequestsResponse } from '@/api/types';
 import { it } from '@/i18n/it';
-import { CATEGORY_OPTIONS, parseCategory, parseGroup, parsePage } from '@/lib/enums';
+import { AREA_OPTIONS, CATEGORY_OPTIONS, parseArea, parseCategory, parseGroup, parsePage } from '@/lib/enums';
 import { REQUEST_GROUPS } from '@/lib/requestStatus';
 import { useDebouncedCallback } from '@/lib/useDebouncedCallback';
 import { Alert } from '@/components/ui/Alert';
@@ -54,6 +54,7 @@ export function RequestsPage() {
   const [chosen, setChosen] = useState<{ id: string; name: string }[]>([]);
   const [result, setResult] = useState<{ response: SendRequestsResponse; names: Map<string, string> } | null>(null);
   const category = parseCategory(params.get('category'));
+  const area = parseArea(params.get('area'));
   const q = params.get('q') ?? '';
   const page = parsePage(params.get('page'));
 
@@ -79,7 +80,7 @@ export function RequestsPage() {
 
   const profileId = selected?.id;
   const summary = useSummary(profileId, profileId !== undefined);
-  const query = useRequests({ profileId, group, category, q: q || undefined, page, limit: LIMIT }, profileId !== undefined);
+  const query = useRequests({ profileId, group, category, area, q: q || undefined, page, limit: LIMIT }, profileId !== undefined);
 
   const isChosen = (id: string) => chosen.some((entry) => entry.id === id);
   const toggle = (item: RequestListItem) =>
@@ -161,7 +162,7 @@ export function RequestsPage() {
           </div>
         )}
         {sendMutation.isError && <Alert tone="danger">{t.selection.sendError}</Alert>}
-        <form role="search" onSubmit={(event) => event.preventDefault()} className="grid gap-4 sm:grid-cols-2">
+        <form role="search" onSubmit={(event) => event.preventDefault()} className="grid gap-4 sm:grid-cols-3">
           <TextField
             label={t.searchLabel}
             type="search"
@@ -179,6 +180,14 @@ export function RequestsPage() {
               </option>
             ))}
           </SelectField>
+          <SelectField label={t.areaLabel} value={area ?? ''} onChange={(event) => update({ area: event.target.value })}>
+            <option value="">{t.allAreas}</option>
+            {AREA_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {t.areas[option]}
+              </option>
+            ))}
+          </SelectField>
         </form>
 
         <QueryBoundary query={query} errorMessage={t.loadError} skeleton={<SkeletonList rows={5} label={it.common.loading} />}>
@@ -186,8 +195,8 @@ export function RequestsPage() {
             data.items.length === 0 ? (
               <EmptyState
                 icon={SearchX}
-                title={q || category ? t.emptyFiltered : t.emptyTitle}
-                description={q || category ? undefined : t.emptyBody}
+                title={q || category || area ? t.emptyFiltered : t.emptyTitle}
+                description={q || category || area ? undefined : t.emptyBody}
               />
             ) : (
               <>
