@@ -5,6 +5,7 @@ import { formatDate } from '@/lib/format';
 import { Badge } from '@/components/ui/Badge';
 import { ExternalLink } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
+import { OBSERVATION_TONE } from '@/lib/observation';
 import { BrokerBadges } from './BrokerBadges';
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -61,6 +62,31 @@ export function BrokerInfo({ broker }: { broker: BrokerDto }) {
           </ul>
         )}
       </section>
+
+      {broker.observed.length > 0 && (
+        <section aria-label={it.brokers.observed.title} className="space-y-2">
+          <h3 className="text-sm font-semibold">{it.brokers.observed.title}</h3>
+          <p className="text-xs text-muted">{it.brokers.observed.intro}</p>
+          <ul className="space-y-2">
+            {broker.observed.map((o) => (
+              <li key={`${o.date}:${o.outcome}:${o.channel ?? ''}`} className="space-y-1.5 rounded-xl border border-line px-3 py-2 text-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge tone={OBSERVATION_TONE[o.outcome]}>{it.brokers.observed.outcome[o.outcome]}</Badge>
+                  <span className="text-xs text-muted">{it.brokers.observed.onDate(formatDate(o.date))}</span>
+                </div>
+                {o.channel && <p className="break-all text-xs text-muted">{it.brokers.observed.aboutContact(o.channel)}</p>}
+                {!o.reachable && <p className="text-xs font-medium text-danger">{it.brokers.observed.unreachable}</p>}
+                {o.note && <p>{o.note}</p>}
+                {o.requires.length > 0 && (
+                  <p className="text-xs text-muted">
+                    {it.brokers.observed.requiresLabel}: {o.requires.map((r) => it.brokers.observed.requires[r]).join(', ')}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="space-y-1">
         <h3 className="text-sm font-semibold">{t.legalNote}</h3>
