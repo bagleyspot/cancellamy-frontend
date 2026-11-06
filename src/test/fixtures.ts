@@ -90,6 +90,7 @@ export function makeBroker(overrides: Partial<BrokerDto> = {}): BrokerDto {
     idRequested: 'maybe',
     sendEnabled: true,
     notes: null,
+    observed: [],
     ...overrides,
   };
 }
