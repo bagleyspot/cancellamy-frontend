@@ -19,3 +19,9 @@ export const OBSERVATION_TONE: Record<ObservationOutcome, Tone> = {
 
 /** The API sends the observations newest first. */
 export const latestObservation = (observed: readonly BrokerObservationDto[]): BrokerObservationDto | undefined => observed[0];
+
+/** Alert tone for the answer shown in a request detail (alerts have no neutral or accent tone). */
+export const observationAlertTone = (outcome: ObservationOutcome): 'info' | 'success' | 'warning' | 'danger' => {
+  const tone = OBSERVATION_TONE[outcome];
+  return tone === 'neutral' || tone === 'accent' ? 'info' : tone;
+};

@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import type { RequestListItem } from '@/api/types';
 import { it } from '@/i18n/it';
 import { Badge } from '@/components/ui/Badge';
+import { OBSERVATION_TONE } from '@/lib/observation';
 import { describeDue } from './dueInfo';
 import { StatusBadge } from './StatusBadge';
 
@@ -20,6 +21,7 @@ export function RequestRow({ item }: { item: RequestListItem }) {
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold tracking-tight text-fg">{item.broker.name}</span>
             <StatusBadge status={item.status} />
+            {item.reply && <Badge tone={OBSERVATION_TONE[item.reply.outcome]}>{it.brokers.observed.outcome[item.reply.outcome]}</Badge>}
             {item.kind === 'access' && <Badge tone="accent">{it.findings.kindBadge}</Badge>}
             {item.custom && <Badge tone="neutral">{t.custom}</Badge>}
             {item.dryRun && <Badge tone="warning">{t.dryRun}</Badge>}
@@ -29,6 +31,7 @@ export function RequestRow({ item }: { item: RequestListItem }) {
             {it.categories[item.broker.category]} · {item.channel === 'email' ? t.channelEmail : t.channelManual} ·{' '}
             <span className="font-mono">{item.shortRef}</span>
           </p>
+          {item.reply?.note && <p className="line-clamp-2 text-xs text-muted">{item.reply.note}</p>}
           {item.actionReason && item.status === 'action_required' && (
             <p className="text-xs font-semibold text-warning">{it.status.actionReason[item.actionReason]}</p>
           )}

@@ -623,6 +623,10 @@ export const it = {
     nextCheck: (date: string) => `Prossimo rinnovo: ${date}`,
     completedOn: (date: string) => `Completata il ${date}`,
     open: (name: string) => `Apri la richiesta per ${name}`,
+    reply: {
+      title: 'Risposta del broker',
+      onDate: (date: string) => `Registrata il ${date}`,
+    },
     detail: {
       back: 'Tutte le richieste',
       loadError: 'Non siamo riusciti a caricare la richiesta.',

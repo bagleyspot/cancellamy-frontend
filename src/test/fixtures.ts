@@ -147,6 +147,7 @@ export function makeRequestListItem(overrides: Partial<RequestListItem> = {}): R
     status: 'sent',
     group: 'in_progress',
     actionReason: null,
+    reply: null,
     cycle: 1,
     custom: false,
     dryRun: false,

@@ -4,6 +4,7 @@ import { useConfig, useRequest } from '@/api/queries';
 import type { RequestDetail } from '@/api/types';
 import { it } from '@/i18n/it';
 import { formatDate } from '@/lib/format';
+import { observationAlertTone } from '@/lib/observation';
 import { Alert } from '@/components/ui/Alert';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardTitle } from '@/components/ui/Card';
@@ -60,6 +61,12 @@ function DetailContent({ detail }: { detail: RequestDetail }) {
             <p className="mt-1 text-xs text-muted">
               Le richieste automatiche sono scaglionate a un massimo di 5 al giorno per utente per rispettare le quote operative del servizio, prevenire filtri antispam e garantire un accesso equo per tutti gli utenti.
             </p>
+          </Alert>
+        )}
+        {detail.reply && (
+          <Alert tone={observationAlertTone(detail.reply.outcome)} title={`${it.requests.reply.title}: ${it.brokers.observed.outcome[detail.reply.outcome]}`}>
+            {detail.reply.note && <p>{detail.reply.note}</p>}
+            <p className="mt-1 text-xs text-muted">{it.requests.reply.onDate(formatDate(detail.reply.date))}</p>
           </Alert>
         )}
         {detail.status === 'action_required' && detail.actionReason && (
