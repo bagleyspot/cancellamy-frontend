@@ -2,9 +2,11 @@ import { BadgeCheck, Send } from 'lucide-react';
 import type { BrokerDto } from '@/api/types';
 import { it } from '@/i18n/it';
 import { Badge } from '@/components/ui/Badge';
+import { OBSERVATION_TONE, latestObservation } from '@/lib/observation';
 
 export function BrokerBadges({ broker }: { broker: BrokerDto }) {
   const t = it.brokers;
+  const seen = latestObservation(broker.observed);
   return (
     <div className="flex flex-wrap gap-1.5">
       {broker.verificationStatus === 'verified' ? (
@@ -23,6 +25,7 @@ export function BrokerBadges({ broker }: { broker: BrokerDto }) {
       ) : (
         <Badge tone="neutral">{t.notContactedBadge}</Badge>
       )}
+      {seen && <Badge tone={OBSERVATION_TONE[seen.outcome]}>{t.observed.outcome[seen.outcome]}</Badge>}
     </div>
   );
 }
