@@ -3,7 +3,7 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import type { SetSenderRequest, SmtpSettingsInput } from '@/api/types';
-import { makeProfile, makeSender } from '@/test/fixtures';
+import { makeConfig, makeProfile, makeSender } from '@/test/fixtures';
 import { apiError, apiUrl, signedInHandlers } from '@/test/handlers';
 import { renderApp } from '@/test/render';
 import { server } from '@/test/server';
@@ -62,6 +62,14 @@ describe('profile: sender card', () => {
     const from = Array.from((screen.getByLabelText('Indirizzo mittente') as HTMLSelectElement).options).map((option) => option.value);
     expect(from).toEqual(profile.emails);
     expect(screen.queryByRole('button', { name: 'Torna a Cancellamy' })).not.toBeInTheDocument();
+  });
+
+  it('explains that replies go straight to the user when the instance runs in mailbox mode', async () => {
+    server.use(http.get(apiUrl('/config'), () => HttpResponse.json(makeConfig({ mailMode: 'mailbox' }))));
+    openProfile(makeSender({ mode: 'smtp', smtp: { host: 'smtp.example.org', port: 587, secure: false, username: 'mario', fromAddress: 'mario@example.it' }, replyAddress: 'mario@example.it' }));
+
+    expect(await screen.findByText(/i broker rispondono direttamente a te, all’indirizzo mario@example\.it/)).toBeInTheDocument();
+    expect(screen.queryByText(/arrivano comunque a Cancellamy/)).not.toBeInTheDocument();
   });
 
   it('requires the password before testing or saving', async () => {
