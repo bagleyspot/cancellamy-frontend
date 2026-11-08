@@ -6,6 +6,7 @@ import type {
   DelistingStatus,
   LeaderboardSort,
   NuisanceChannel,
+  RequestArea,
   RequestGroup,
   SearchEngine,
   VerificationStatus,
@@ -13,6 +14,13 @@ import type {
 
 export const CATEGORY_OPTIONS = Object.keys(it.categories) as BrokerCategory[];
 export const VERIFICATION_OPTIONS = Object.keys(it.verification) as VerificationStatus[];
+
+/** Geographic area filter of the requests list, seen from Italy. */
+export const AREA_OPTIONS = Object.keys(it.requests.areas) as RequestArea[];
+
+export function parseArea(value: string | null): RequestArea | undefined {
+  return AREA_OPTIONS.find((option) => option === value);
+}
 
 export function parseCategory(value: string | null): BrokerCategory | undefined {
   return CATEGORY_OPTIONS.find((option) => option === value);
