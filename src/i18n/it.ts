@@ -891,6 +891,8 @@ export const it = {
     },
     stepper: 'Passi della configurazione',
     steps: ['Dati personali', 'Contatti e indirizzi', 'Autorizzazione', 'Riepilogo e attivazione'],
+    // When the emails leave from the user's own mailbox there is no delega to sign.
+    stepsOwnMailbox: ['Dati personali', 'Contatti e indirizzi', 'Riepilogo e attivazione'],
     stepOf: (n: number, total: number) => `Passo ${n} di ${total}`,
     newTitle: 'Nuovo profilo',
     newSubtitle: 'Inserisci i dati con cui sei presente online: più sono completi, più le richieste sono precise.',
