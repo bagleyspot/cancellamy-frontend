@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router';
 import { useCreateProfile } from '@/api/mutations';
-import { useProfiles } from '@/api/queries';
+import { useConfig, useProfiles } from '@/api/queries';
 import { it } from '@/i18n/it';
 import { ApiErrorAlert } from '@/components/ApiErrorAlert';
 import { Alert } from '@/components/ui/Alert';
@@ -23,6 +23,10 @@ export function CreateProfilePage() {
   const user = useCurrentUser();
   const profiles = useProfiles();
   const create = useCreateProfile();
+  const config = useConfig();
+  // In mailbox mode the emails leave from the user's own mailbox: no delega step.
+  const withAuthorization = config.data?.mailMode !== 'mailbox';
+  const steps = withAuthorization ? t.steps : t.stepsOwnMailbox;
   const [step, setStep] = useState<1 | 2>(1);
 
   const form = useForm<ProfileFormValues>({
@@ -50,7 +54,7 @@ export function CreateProfilePage() {
         <Alert tone="warning" title={t.limitReached} actions={<ButtonLink to="/app/profili" size="sm" variant="secondary">{t.title}</ButtonLink>} />
       ) : (
         <>
-          <Stepper current={step} />
+          <Stepper current={step} withAuthorization={withAuthorization} />
           <Card>
             <form
               onSubmit={(event) => {
@@ -62,8 +66,8 @@ export function CreateProfilePage() {
               className="space-y-6"
             >
               <div className="space-y-1">
-                <h2 className="text-xl font-semibold">{t.steps[step - 1]}</h2>
-                <p className="text-sm text-muted">{t.stepOf(step, t.steps.length)}</p>
+                <h2 className="text-xl font-semibold">{steps[step - 1]}</h2>
+                <p className="text-sm text-muted">{t.stepOf(step, steps.length)}</p>
               </div>
               <div hidden={step !== 1}>
                 <PersonalFields form={form} />

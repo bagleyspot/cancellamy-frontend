@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Clock, Ban } from 'lucide-react';
+import { AlertCircle, Ban, CheckCircle2, Clock, Send } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Link } from 'react-router';
 import { useRequests, useSummary } from '@/api/queries';
@@ -20,6 +20,7 @@ import { RequestRow } from '@/features/requests/RequestRow';
 import { useSelectedProfile } from '@/features/shell/ProfileContext';
 
 const GROUP_CARDS: { group: RequestGroup; icon: LucideIcon; accent: string }[] = [
+  { group: 'to_send', icon: Send, accent: 'text-accent' },
   { group: 'in_progress', icon: Clock, accent: 'text-primary' },
   { group: 'action_required', icon: AlertCircle, accent: 'text-accent' },
   { group: 'completed', icon: CheckCircle2, accent: 'text-success' },
@@ -28,6 +29,8 @@ const GROUP_CARDS: { group: RequestGroup; icon: LucideIcon; accent: string }[] =
 
 function countFor(group: RequestGroup, counts: SummaryDto['counts']): number {
   switch (group) {
+    case 'to_send':
+      return counts.toSend;
     case 'in_progress':
       return counts.inProgress;
     case 'action_required':
@@ -93,7 +96,7 @@ function SummaryView({ summary, profileId }: { summary: SummaryDto; profileId: s
     <div className="space-y-6">
       <section aria-label={t.countersTitle}>
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {GROUP_CARDS.map(({ group, icon: Icon, accent }) => (
+          {GROUP_CARDS.filter(({ group }) => group !== 'to_send' || summary.counts.toSend > 0).map(({ group, icon: Icon, accent }) => (
             <li key={group}>
               <Link
                 to={`/app/richieste?group=${group}`}

@@ -5,6 +5,7 @@ import { GROUP_OF_STATUS, REQUEST_GROUPS, groupOfStatus, isCancellable } from '.
 
 describe('request status to group mapping', () => {
   const expected: Record<RequestGroup, RequestStatus[]> = {
+    to_send: ['draft'],
     in_progress: ['queued', 'sent', 'replied', 'overdue', 'escalated'],
     action_required: ['action_required'],
     completed: ['completed'],
@@ -27,7 +28,14 @@ describe('request status to group mapping', () => {
     for (const group of REQUEST_GROUPS) expect(strings.status.group[group]).toBeTruthy();
   });
 
+  it('calls drafts and their group "Da inviare"', () => {
+    expect(strings.status.request.draft).toBe('Da inviare');
+    expect(strings.status.group.to_send).toBe('Da inviare');
+    expect(REQUEST_GROUPS[0]).toBe('to_send');
+  });
+
   it('only allows cancelling requests that are still open', () => {
+    expect(isCancellable('draft')).toBe(true);
     expect(isCancellable('sent')).toBe(true);
     expect(isCancellable('action_required')).toBe(true);
     expect(isCancellable('completed')).toBe(false);

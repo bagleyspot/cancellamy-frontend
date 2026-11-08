@@ -1,6 +1,7 @@
 import { useActivateProfile } from '@/api/mutations';
+import { useConfig } from '@/api/queries';
 import type { ActivateProfileResponse, ProfileDto } from '@/api/types';
-import { CheckCircle2, Clock, Rocket } from 'lucide-react';
+import { CheckCircle2, Clock, Rocket, Send } from 'lucide-react';
 import { it } from '@/i18n/it';
 import { formatDate } from '@/lib/format';
 import { ApiErrorAlert } from '@/components/ApiErrorAlert';
@@ -20,20 +21,33 @@ interface ActivationStepProps {
 export function ActivationStep({ profile, result, onActivated }: ActivationStepProps) {
   const t = it.profiles.summary;
   const activate = useActivateProfile(profile.id);
+  const config = useConfig().data;
 
   if (result) {
     const dailyLimit = result.dailyEmailBatchSize ?? 5;
+    const awaiting = result.awaitingSelection === true;
+    const selectionMax = config?.sendSelectionMax ?? 10;
     return (
       <div className="space-y-4">
         <Alert tone="success" title={t.doneTitle}>
           <p className="flex items-start gap-2">
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-            {t.doneEmails(result.emailRequests)}
+            {awaiting ? t.doneDrafts(result.emailRequests) : t.doneEmails(result.emailRequests)}
           </p>
           <p>{t.doneManual(result.manualActions)}</p>
         </Alert>
 
-        {result.emailRequests > 0 && (
+        {awaiting && result.emailRequests > 0 && (
+          <div className="space-y-2 rounded-xl border border-line bg-sunken/60 p-4 text-sm">
+            <div className="flex items-center gap-2 font-semibold text-fg">
+              <Send className="h-4 w-4 text-primary" aria-hidden="true" />
+              <span>{t.draftsTitle}</span>
+            </div>
+            <p className="text-xs leading-relaxed text-muted">{t.draftsBody(selectionMax)}</p>
+          </div>
+        )}
+
+        {!awaiting && result.emailRequests > 0 && (
           <div className="rounded-xl border border-line bg-sunken/60 p-4 text-sm space-y-2">
             <div className="flex items-center gap-2 font-semibold text-fg">
               <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -46,8 +60,9 @@ export function ActivationStep({ profile, result, onActivated }: ActivationStepP
         )}
 
         <div className="flex flex-wrap gap-3">
-          {result.manualActions > 0 && <ButtonLink to="/app/richieste?group=action_required">{t.goToActions}</ButtonLink>}
-          <ButtonLink to="/app/richieste" variant={result.manualActions > 0 ? 'secondary' : 'primary'}>
+          {awaiting && result.emailRequests > 0 && <ButtonLink to="/app/richieste?group=to_send">{t.goToDrafts}</ButtonLink>}
+          {result.manualActions > 0 && <ButtonLink to="/app/richieste?group=action_required" variant={awaiting ? 'secondary' : 'primary'}>{t.goToActions}</ButtonLink>}
+          <ButtonLink to="/app/richieste" variant="secondary">
             {t.goToRequests}
           </ButtonLink>
         </div>
@@ -74,12 +89,21 @@ export function ActivationStep({ profile, result, onActivated }: ActivationStepP
           <AuthorizationPdfActions profileId={profile.id} />
         </section>
       )}
+      {config?.sendSelection === 'manual' ? (
+        <div className="flex items-start gap-2 rounded-xl border border-line bg-sunken/60 p-3 text-xs text-muted">
+          <Send className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+          <p>
+            <strong className="font-semibold text-fg">{t.manualNoteTitle}</strong> {t.manualNote(config.sendSelectionMax)}
+          </p>
+        </div>
+      ) : (
       <div className="rounded-xl border border-line bg-sunken/60 p-3 text-xs text-muted flex items-start gap-2">
-        <Clock className="h-4 w-4 shrink-0 text-primary mt-0.5" aria-hidden="true" />
-        <p>
-          <strong className="text-fg font-semibold">Invio equo e scaglionato:</strong> Per rispettare le quote operative e prevenire filtri antispam dei broker, le richieste email vengono inviate a gruppi di massimo 5 al giorno. Le restanti richieste rimangono in coda e vengono trasmesse automaticamente ogni giorno successivo.
-        </p>
-      </div>
+          <Clock className="h-4 w-4 shrink-0 text-primary mt-0.5" aria-hidden="true" />
+          <p>
+            <strong className="text-fg font-semibold">Invio equo e scaglionato:</strong> Per rispettare le quote operative e prevenire filtri antispam dei broker, le richieste email vengono inviate a gruppi di massimo 5 al giorno. Le restanti richieste rimangono in coda e vengono trasmesse automaticamente ogni giorno successivo.
+          </p>
+        </div>
+      )}
       <ApiErrorAlert error={activate.isError ? activate.error : null} />
       <Button onClick={() => activate.mutate(undefined, { onSuccess: onActivated })} loading={activate.isPending}>
         <Rocket className="h-4 w-4" aria-hidden="true" />

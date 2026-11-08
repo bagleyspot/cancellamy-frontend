@@ -64,6 +64,8 @@ export interface PublicConfigDto {
   attachmentRetentionDays: number;
   mailMode: MailMode; // dry-run => UI must show a banner "Modalità prova: nessuna email reale viene inviata"
   mailRedirect: boolean; // mailbox mode with MAIL_REDIRECT_TO: emails go to a test address instead of the brokers (UI banner)
+  sendSelection: 'manual' | 'auto'; // manual: email requests are drafts and the user chooses which to send
+  sendSelectionMax: number; // most drafts the user can send in one call (10)
   maxProfiles: number;
   customRequestsPerMonth: number;
   appVersion: string;
@@ -163,6 +165,7 @@ export interface AuthorizationDto {
 
 export interface RequestCounts {
   total: number;
+  toSend: number; // drafts waiting for the user to choose them (SEND_SELECTION=manual)
   inProgress: number;
   actionRequired: number;
   completed: number;
@@ -173,6 +176,7 @@ export interface ProfileDto extends ProfileInput {
   id: string;
   identityVerified: boolean;
   senderMode: SenderMode;
+  authorizationRequired: boolean; // false when the profile sends from its own mailbox (SMTP/Gmail) or the instance runs in mailbox mode: no delega to sign
   status: ProfileStatus;
   authorization: AuthorizationDto | null;
   requestCounts: RequestCounts;
@@ -192,6 +196,16 @@ export interface ActivateProfileResponse {
   emailRequests: number; // queued to be sent by email
   manualActions: number; // require user action (web form, phone...)
   dailyEmailBatchSize?: number; // max automated email requests sent per user per day (fair-share quota)
+  awaitingSelection?: boolean; // true when `emailRequests` are drafts the user has to choose (sendSelection = manual)
+}
+
+export interface SendRequestsRequest {
+  requestIds: string[]; // 1..10 drafts the user chose to send now
+}
+
+export interface SendRequestsResponse {
+  queued: number; // drafts turned into queued requests, due right away
+  skipped: { id: string; reason: 'not_found' | 'not_draft' | 'profile_not_active' }[];
 }
 
 // ------------------------------------------------------------------ brokers (registry)
@@ -263,6 +277,7 @@ export interface BrokerStatsDto {
 
 // ------------------------------------------------------------------ requests
 export type RequestStatus =
+  | 'draft' // prepared, waiting for the user to choose it (SEND_SELECTION=manual); not scheduled, not queued
   | 'queued'
   | 'sent'
   | 'replied'
@@ -274,7 +289,8 @@ export type RequestStatus =
   | 'cancelled';
 
 /** UI grouping (same as the four tabs of the dashboard). */
-export type RequestGroup = 'in_progress' | 'action_required' | 'completed' | 'not_removable';
+export type RequestGroup = 'to_send' | 'in_progress' | 'action_required' | 'completed' | 'not_removable';
+// to_send: draft
 // in_progress: queued, sent, replied, overdue, escalated
 // action_required: action_required
 // completed: completed
@@ -378,12 +394,16 @@ export interface RequestDetail extends RequestListItem {
   canSimulateReply: boolean; // true only in dry-run mode
 }
 
+/** Geographic area of the broker seen from Italy: covers Italy (IT, EU/EEA or worldwide markets), other markets only, or not classified (includes custom requests). */
+export type RequestArea = 'italy' | 'other' | 'unknown';
+
 export interface ListRequestsQuery {
   kind?: RequestKind;
   profileId?: string;
   group?: RequestGroup;
   status?: RequestStatus;
   category?: BrokerCategory;
+  area?: RequestArea;
   q?: string; // matches broker name
   page?: number;
   limit?: number; // default 20, max 100
